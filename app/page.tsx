@@ -78,9 +78,9 @@ export default function HomePage() {
               <Link href="/create-event" className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
                 Create Event
               </Link>
-              <button className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
-                Join Event
-              </button>
+              <Link href="/find-events" className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+                Find Events
+              </Link>
             </div>
           </div>
           <div className="flex flex-col items-center mr-10 ml-50 mt-30">
