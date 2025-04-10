@@ -6,6 +6,7 @@ import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 import { supabase } from '@/lib/supabaseClient';
 import './customCursor.css';
+import { useRouter } from 'next/navigation';
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -20,6 +21,7 @@ const vt323 = VT323({
 });
 
 export default function HomePage() {
+  const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -75,9 +77,18 @@ export default function HomePage() {
               Create or join an event in seconds.
             </p>
             <div className="flex gap-4 ml-32">
-              <Link href="/create-event" className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+              <button
+                onClick={() => {
+                  if (!userEmail) {
+                    router.push('/login');
+                  } else {
+                    router.push('/create-event');
+                  }
+                }}
+                className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+              >
                 Create Event
-              </Link>
+              </button>
               <Link href="/find-events" className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
                 Find Events
               </Link>
