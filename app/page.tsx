@@ -42,7 +42,7 @@ export default function HomePage() {
               LET&apos;S PLAN YOUR EVENT!
             </div>
             <Image 
-              src="/image.png"
+              src="/logo.png"
               alt="logo"
               width={300}
               height={300}
