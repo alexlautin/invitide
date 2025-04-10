@@ -33,8 +33,12 @@ export default function HomePage() {
               Create or join an event in seconds.
             </p>
             <div className="flex gap-4 ml-32">
-              <button className="border-[4px] text-[30px] font-jetbrains font-normal border-[#E4DDC4] px-8 py-2 uppercase">Create Event</button>
-              <button className="border-[4px] text-[30px] font-jetbrains font-normal border-[#E4DDC4] px-10 py-2 uppercase">Find Event</button>
+              <button className="border-[4px] text-[30px] font-jetbrains font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+                Create Event
+              </button>
+              <button className="border-[4px] text-[30px] font-jetbrains font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+                Join Event
+              </button>
             </div>
           </div>
           <div className="flex flex-col items-center mr-10 ml-50 mt-30">
