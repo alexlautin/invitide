@@ -18,6 +18,17 @@ const vt323 = VT323({
 export default function HomePage() {
   return (
     <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-2`}>
+      <div className="absolute top-4 right-4 flex gap-4">
+        <button className="border-[4px] text-[25px] font-mono font-normal border-[#E4DDC4] px-4 py-0 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+          Login
+        </button>
+        <button className="border-[4px] text-[25px] font-mono font-normal border-[#E4DDC4] px-4 py-0 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+          Sign Up
+        </button>
+        <button className="border-[4px] text-[25px] font-mono font-normal border-[#E4DDC4] px-4 py-0 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+          Go
+        </button>
+      </div>
       <h1 className="text-4xl font-mono font-normal p-2 uppercase mb-8">
         Invitide
       </h1>
@@ -33,17 +44,21 @@ export default function HomePage() {
               Create or join an event in seconds.
             </p>
             <div className="flex gap-4 ml-32">
-              <button className="border-[4px] text-[30px] font-jetbrains font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+              <button className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
                 Create Event
               </button>
-              <button className="border-[4px] text-[30px] font-jetbrains font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+              <button className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
                 Join Event
               </button>
             </div>
           </div>
           <div className="flex flex-col items-center mr-10 ml-50 mt-30">
-          <div className="border border-[#E4DDC4] px-2 py-1 text-sm">
-              LET&apos;S PLAN YOUR EVENT!
+            <div className="relative bg-[#1F1F1F] ml-10 border-[5px] border-[#E4DDC4] text-[#E4DDC4] px-4 py-3 text-4xl rounded-lg shadow-[4px_4px_0px_#000]" style={{ fontFamily: 'var(--font-vt323)' }}>
+              <span className="block leading-tight">
+                LET&apos;S PLAN YOUR EVENT!
+              </span>
+              <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
+              <div className="absolute bottom-[-11px] left-[calc(50%-11px)] w-0 h-0 border-l-[11px] border-r-[11px] border-t-[11px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
             </div>
             <Image 
               src="/logo.png"
