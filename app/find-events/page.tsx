@@ -20,7 +20,7 @@ const vt323 = VT323({
 
 interface Event {
   id: string;
-  title: string;
+  name: string;
   description: string;
   date: string;
   location: string;
@@ -53,7 +53,7 @@ export default function FindEvents() {
   };
 
   const filteredEvents = events.filter(event =>
-    (event.title?.toLowerCase() ?? '').includes(searchQuery.toLowerCase()) ||
+    (event.name?.toLowerCase() ?? '').includes(searchQuery.toLowerCase()) ||
     (event.description?.toLowerCase() ?? '').includes(searchQuery.toLowerCase()) ||
     (event.location?.toLowerCase() ?? '').includes(searchQuery.toLowerCase())
   );
@@ -92,13 +92,13 @@ export default function FindEvents() {
               {event.image_url && (
                 <img
                   src={event.image_url}
-                  alt={event.title}
+                  alt={event.name}
                   className="w-full h-48 object-cover"
                 />
               )}
               <div className="p-6">
                 <h2 className="text-2xl font-mono mb-2 uppercase" style={{ fontFamily: 'var(--font-vt323)' }}>
-                  {event.title}
+                  {event.name}
                 </h2>
                 <p className="text-[#E4DDC4] mb-4 font-mono">{event.description}</p>
                 <div className="flex justify-between text-sm text-[#E4DDC4] font-mono">
