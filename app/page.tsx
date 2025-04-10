@@ -17,7 +17,7 @@ const vt323 = VT323({
 
 export default function HomePage() {
   return (
-    <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-2 bg-[url('noise.svg')] bg-repeat`}>
+    <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-2`}>
       <h1 className="text-4xl font-mono font-normal p-2 uppercase mb-8">
         Invitide
       </h1>
