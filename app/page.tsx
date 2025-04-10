@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 import { supabase } from '@/lib/supabaseClient';
+import './customCursor.css';
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -83,21 +84,22 @@ export default function HomePage() {
             </div>
           </div>
           <div className="flex flex-col items-center mr-10 ml-50 mt-30">
-            <div className="relative bg-[#1F1F1F] ml-10 border-[5px] border-[#E4DDC4] text-[#E4DDC4] px-4 py-3 text-4xl rounded-lg shadow-[4px_4px_0px_#000]" style={{ fontFamily: 'var(--font-vt323)' }}>
-              {/* Speech bubble inspiration: https://nicolasgallagher.com/pure-css-speech-bubbles/demo/default.css */}
-              <span className="block leading-tight">
-                LET&apos;S PLAN YOUR EVENT!
-              </span>
-              <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
-              <div className="absolute bottom-[-11px] left-[calc(50%-11px)] w-0 h-0 border-l-[11px] border-r-[11px] border-t-[11px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
+            <div className="group flex flex-col items-center">
+              <div className="relative bg-[#1F1F1F] ml-10 border-[5px] border-[#E4DDC4] text-[#E4DDC4] px-4 py-3 text-4xl rounded-lg shadow-[4px_4px_0px_#000]" style={{ fontFamily: 'var(--font-vt323)' }}>
+                <span className="block leading-tight">
+                  LET&apos;S PLAN YOUR EVENT!
+                </span>
+                <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
+                <div className="absolute bottom-[-11px] left-[calc(50%-11px)] w-0 h-0 border-l-[11px] border-r-[11px] border-t-[11px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
+              </div>
+              <Image 
+                src="/logo.png"
+                alt="logo"
+                width={300}
+                height={300}
+                className="mb-2 group-hover:animate-bounce"
+              />
             </div>
-            <Image 
-              src="/logo.png"
-              alt="logo"
-              width={300}
-              height={300}
-              className="mb-2"
-            />
           </div>
         </div>
       </div>
