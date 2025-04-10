@@ -107,7 +107,14 @@ export default function EventPage({ params }: { params: { id: string } }) {
             <p className="text-lg mb-4">{event.description}</p>
             <div className="flex flex-col gap-2">
               <p className="text-[#E4DDC4]">
-                <span className="font-semibold">Date:</span> {new Date(event.date).toLocaleDateString()}
+                  <span className="font-semibold">Date & Time:</span>{' '}
+                  {new Date(event.date).toLocaleString(undefined, {
+                    weekday: 'long',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                  })}
               </p>
               <p className="text-[#E4DDC4]">
                 <span className="font-semibold">Location:</span> {event.location}

@@ -154,7 +154,12 @@ export default function FindEvents() {
                   </h2>
                   <p className="text-[#E4DDC4] mb-4 font-mono">{event.description}</p>
                   <div className="flex justify-between text-sm text-[#E4DDC4] font-mono">
-                    <span>{new Date(event.date).toLocaleDateString()}</span>
+                    <span>
+                      {new Date(event.date).toLocaleString(undefined, {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      })}
+                    </span>
                     <span>{event.location}</span>
                   </div>
                 </div>
