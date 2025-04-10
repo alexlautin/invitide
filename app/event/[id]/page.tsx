@@ -88,37 +88,37 @@ export default function EventPage({ params }: { params: { id: string } }) {
 
       <div className="flex flex-1 items-center justify-center">
         <div className="max-w-2xl w-full px-4">
-        <div className="bg-[#1F1F1F] border-[5px] border-[#E4DDC4] rounded-lg p-8 shadow-[4px_4px_0px_#000]">
-          {event.image_url && (
+          <div className="bg-[#1F1F1F] border-[5px] border-[#E4DDC4] rounded-lg p-8 shadow-[4px_4px_0px_#000]">
+            {event.image_url && (
+              <div className="mb-6">
+                <img
+                  src={event.image_url}
+                  alt={event.name}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+              </div>
+            )}
+
+            <h1 className="text-4xl mb-4" style={{ fontFamily: 'var(--font-vt323)' }}>
+              {event.name}
+            </h1>
+
             <div className="mb-6">
-              <img
-                src={event.image_url}
-                alt={event.name}
-                className="w-full h-64 object-cover rounded-lg"
-              />
+              <p className="text-lg mb-4">{event.description}</p>
+              <div className="flex flex-col gap-2">
+                <p className="text-[#E4DDC4]">
+                  <span className="font-semibold">Date:</span> {new Date(event.date).toLocaleDateString()}
+                </p>
+                <p className="text-[#E4DDC4]">
+                  <span className="font-semibold">Location:</span> {event.location}
+                </p>
+                <p className="text-[#E4DDC4]">
+                  <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
+                </p>
+              </div>
             </div>
-          )}
 
-          <h1 className="text-4xl mb-4" style={{ fontFamily: 'var(--font-vt323)' }}>
-            {event.name}
-          </h1>
-
-          <div className="mb-6">
-            <p className="text-lg mb-4">{event.description}</p>
-            <div className="flex flex-col gap-2">
-              <p className="text-[#E4DDC4]">
-                <span className="font-semibold">Date:</span> {new Date(event.date).toLocaleDateString()}
-              </p>
-              <p className="text-[#E4DDC4]">
-                <span className="font-semibold">Location:</span> {event.location}
-              </p>
-              <p className="text-[#E4DDC4]">
-                <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
-              </p>
-            </div>
-          </div>
-
-          <button
+            <button
               onClick={() => {
                 const eventUrl = `${window.location.origin}/event/${event.id}`;
                 navigator.clipboard.writeText(eventUrl).then(() => {
@@ -126,11 +126,11 @@ export default function EventPage({ params }: { params: { id: string } }) {
                   setTimeout(() => setCopied(false), 2000); // hide after 3s
                 });
               }}
-            className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
-          >
-            Copy Event Link
-          </button>
-        </div>
+              className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+            >
+              Copy Event Link
+            </button>
+          </div>
         </div>
       </div>
       {copied && (
