@@ -12,22 +12,29 @@ export default function CreateEventPage() {
     const [eventDate, setEventDate] = useState('');
     const [location, setLocation] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const { error } = await supabase.from('events').insert([
+        const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          
+          const { error } = await supabase.from('events').insert([
             {
-                name: eventName,
-                date: eventDate,
-                location: location,
+              name: eventName,
+              date: new Date(eventDate).toISOString().slice(0, 10),
+              location: location,
+              user_id: user?.id,
             },
-        ]);
+          ]);
 
         if (error) {
             setError(error.message);
         } else {
-            router.push('/'); // or to a confirmation page
+            setSuccess(true);
+            setTimeout(() => router.push('/create-event/success'), 2000);
         }
     };
 
@@ -83,7 +90,7 @@ export default function CreateEventPage() {
                 </div>
                 <div className="hidden sm:flex flex-col items-center mt-8 sm:mt-0">
                     <div className="relative bg-[#1F1F1F] border-[5px] border-[#E4DDC4] px-4 py-3 text-3xl rounded-lg shadow-[4px_4px_0_#000]" style={{ fontFamily: 'var(--font-vt323)' }}>
-                        <span>Let&apos;s Plan Your Event!</span>
+                        <span>{success ? "Event Created Successfully!" : "Let's Plan Your Event!"}</span>
                         <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
                     </div>
                     <Image
@@ -91,7 +98,7 @@ export default function CreateEventPage() {
                         alt="Invitide mascot"
                         width={200}
                         height={200}
-                        className="mt-4"
+                        className={`mt-4 ${success ? 'animate-bounce' : ''}`}
                     />
                 </div>
             </div>
