@@ -10,10 +10,18 @@ export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -54,13 +62,42 @@ export default function SignupPage() {
           </div>
           <div>
             <label className="block mb-1 text-sm font-medium text-[#E4DDC4]">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium text-[#E4DDC4]">Confirm Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                required
+                className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
             <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              type="checkbox"
+              id="showPassword"
+              checked={showPassword}
+              onChange={(e) => setShowPassword(e.target.checked)}
+              className="h-4 w-4 accent-[#E4DDC4] cursor-pointer"
             />
+            <label
+              htmlFor="showPassword"
+              className="text-sm text-[#E4DDC4] cursor-pointer hover:text-white transition-colors duration-200"
+            >
+              Show Password
+            </label>
           </div>
           {error && <p className="text-red-600 text-sm">{error}</p>}
           <button
