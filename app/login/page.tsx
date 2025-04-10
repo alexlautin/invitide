@@ -16,38 +16,48 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      setError(error.message);
-    } else {
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user?.id) {
-          const userId = session.user.id;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-          const { data: existingProfile } = await supabase
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      if (data?.user?.id) {
+        const userId = data.user.id;
+
+        // Check if profile exists
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', userId)
+          .single();
+
+        if (!existingProfile) {
+          const displayName = data.user.user_metadata?.display_name || 'Anonymous';
+          const { error: profileError } = await supabase
             .from('profiles')
-            .select('id')
-            .eq('id', userId)
-            .single();
-
-          if (!existingProfile) {
-            const displayName = session.user.user_metadata?.display_name || 'Anonymous';
-            const { error: profileError } = await supabase.from('profiles').insert([
+            .insert([
               {
                 id: userId,
                 display_name: displayName,
               },
             ]);
-            if (profileError) {
-              console.error('Failed to insert profile after login:', profileError.message);
-            }
+
+          if (profileError) {
+            console.error('Failed to create profile:', profileError.message);
           }
         }
-      });
-      router.push('/');
+
+        router.push('/');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An unexpected error occurred. Please try again.');
     }
   };
 
