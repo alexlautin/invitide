@@ -7,6 +7,8 @@ import { VT323 } from 'next/font/google';
 import { supabase } from '@/lib/supabaseClient';
 import './customCursor.css';
 import { useRouter } from 'next/navigation';
+import { User } from '@supabase/supabase-js';
+
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -23,8 +25,7 @@ const vt323 = VT323({
 export default function HomePage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDisplayName = async () => {
@@ -38,8 +39,7 @@ export default function HomePage() {
         setLoading(false);
         return;
       }
-
-      const user = session?.user;
+      const user = session?.user ?? null;
       setUser(user);
 
       if (user?.id) {
@@ -63,31 +63,7 @@ export default function HomePage() {
     setDisplayName(null);
     setUser(null);
   };
-
-  const spawnTinyStar = () => {
-    const star = document.createElement('div');
-    console.log('Star spawned!');
-    // Use the custom "star" animation instead of "animate-ping"
-    star.className = 'absolute w-12 h-12 bg-contain bg-no-repeat opacity-100 animate-star';
-    star.style.backgroundImage = 'url(/tinystar.png)';
-    star.style.top = `${Math.random() * window.innerHeight}px`;
-    star.style.left = `${Math.random() * window.innerWidth}px`;
   
-    document.body.appendChild(star);
-  
-    // Remove the star after the animation ends
-    star.addEventListener('animationend', () => {
-      console.log('Animation ended, removing star.');
-      star.remove();
-    });
-  };
-  
-
-  // useEffect(() => {
-  //   const interval = setInterval(spawnTinyStar, 2000);
-  //   return () => clearInterval(interval);
-  // }, []);
-
   return (
     <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-2`}>
       <div className="absolute top-4 right-4 flex items-center gap-4">

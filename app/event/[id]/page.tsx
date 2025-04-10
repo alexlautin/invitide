@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import Image from 'next/image'; // Make sure this is imported at the top
 import Link from 'next/link';
-import Image from 'next/image';
+import { useParams } from 'next/navigation';
+
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 
@@ -33,34 +34,30 @@ interface Event {
   } | null;
 }
 
-export default function EventPage({ params }: { params: { id: string } }) {
-  const router = useRouter();
+export default function EventPage() {
+  const params = useParams();
+  const id = params?.id as string;
+
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [error] = useState<string | null>(null);  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (!id) return;
     const fetchEvent = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('events')
-          .select('*, profiles(display_name)')
-          .eq('id', params.id)
-          .single();
+      const { data, error } = await supabase
+        .from('events')
+        .select('*, profiles(display_name)')
+        .eq('id', id)
+        .single();
 
-        if (error) throw error;
-        setEvent(data);
-      } catch (err) {
-        console.error('Error fetching event:', err);
-        setError('Failed to load event details');
-      } finally {
-        setLoading(false);
-      }
+      if (error) throw error;
+      setEvent(data);
+      setLoading(false);
     };
 
     fetchEvent();
-  }, [params.id]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -89,15 +86,13 @@ export default function EventPage({ params }: { params: { id: string } }) {
       <div className="flex flex-1 items-center justify-center">
         <div className="max-w-2xl w-full px-4">
           <div className="bg-[#1F1F1F] border-[5px] border-[#E4DDC4] rounded-lg p-8 shadow-[4px_4px_0px_#000]">
-            {event.image_url && (
-              <div className="mb-6">
-                <img
-                  src={event.image_url}
-                  alt={event.name}
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-              </div>
-            )}
+            <Image
+              src={event.image_url}
+              alt={event.name}
+              width={800}
+              height={400}
+              className="w-full h-64 object-cover rounded-lg"
+            />
 
             <h1 className="text-4xl mb-4" style={{ fontFamily: 'var(--font-vt323)' }}>
               {event.name}

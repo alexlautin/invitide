@@ -1,28 +1,21 @@
 'use client';
 import Image from 'next/image';
-import { JetBrains_Mono } from 'next/font/google';
 import Link from 'next/link';
-import { VT323 } from 'next/font/google';
 import './../../customCursor.css';
-
-const jetBrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-jetbrains-mono',
-  weight: ['400'],
-});
-
-const vt323 = VT323({
-  subsets: ['latin'],
-  variable: '--font-vt323',
-  weight: ['400'],
-});
-
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
-const Success: React.FC = () => {
-  const [event, setEvent] = useState<any>(null);
+type Event = {
+  id: string;
+  name: string;
+  date: string;
+  location: string;
+  created_at: string;
+  // add more fields as needed
+};
 
+const Success: React.FC = () => {
+  const [event, setEvent] = useState<Event | null>(null);
   useEffect(() => {
     const fetchLatestEvent = async () => {
       const { data, error } = await supabase

@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { User } from '@supabase/supabase-js';
+
 
 export default function CreateEventPage() {
     const router = useRouter();
@@ -13,7 +15,7 @@ export default function CreateEventPage() {
     const [location, setLocation] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true); // Add loading state for initial load
-    const [user, setUser] = useState<any>(null); // User state to store the authenticated user
+    const [user, setUser] = useState<User | null>(null);
     const [eventTime, setEventTime] = useState('');
 
     useEffect(() => {
@@ -133,8 +135,7 @@ export default function CreateEventPage() {
                 </div>
                 <div className="hidden sm:flex flex-col items-center mt-8 sm:mt-0">
                     <div className="relative bg-[#1F1F1F] border-[5px] border-[#E4DDC4] px-4 py-3 text-3xl rounded-lg shadow-[4px_4px_0_#000]" style={{ fontFamily: 'var(--font-vt323)' }}>
-                        <span>Let's Plan Your Event!</span>
-                        <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
+                        <span>Let&apos;s Plan Your Event!</span>                        <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
                     </div>
                     <Image
                         src="/logo.png"

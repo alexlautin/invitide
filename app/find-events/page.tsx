@@ -6,6 +6,7 @@ import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -37,7 +38,7 @@ export default function FindEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export default function FindEvents() {
 
       const currentUser = session?.user;
       if (currentUser?.id) {
-        setUserId(currentUser.id);
+
         await fetchEvents(currentUser.id); // Fetch events after session is restored
       } else {
         setLoading(false); // Set loading to false if there is no session
@@ -142,10 +143,13 @@ export default function FindEvents() {
                   </span>
                 </div>
                 {event.image_url && (
-                  <img
+                  <Image
                     src={event.image_url}
                     alt={event.name}
+                    width={500}
+                    height={200}
                     className="w-full h-48 object-cover"
+                    unoptimized // Optional: Remove this if you're hosting images on a CDN that supports optimization
                   />
                 )}
                 <div className="p-6">
