@@ -94,11 +94,8 @@ export default function HomePage() {
         {!loading && user ? (
           <>
             <Link href="/profile" className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
-              Profile
+              {displayName ?? user.email}
             </Link>
-            <span className="text-[18px] font-mono text-[#E4DDC4]">
-              Welcome, {displayName ?? user.email}
-            </span>
             <button
               onClick={handleSignOut}
               className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
