@@ -22,28 +22,80 @@ const vt323 = VT323({
 
 export default function HomePage() {
   const router = useRouter();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUserEmail(session?.user.email ?? null);
+    const fetchDisplayName = async () => {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error('Error getting session:', error.message);
+        setLoading(false);
+        return;
+      }
+
+      const user = session?.user;
+      setUser(user);
+
+      if (user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', user.id)
+          .single();
+
+        setDisplayName(profile?.display_name ?? null);
+      }
+
+      setLoading(false);
     };
 
-    fetchSession();
+    fetchDisplayName();
   }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    setUserEmail(null);
+    setDisplayName(null);
+    setUser(null);
   };
+
+  const spawnTinyStar = () => {
+    const star = document.createElement('div');
+    console.log('Star spawned!');
+    // Use the custom "star" animation instead of "animate-ping"
+    star.className = 'absolute w-12 h-12 bg-contain bg-no-repeat opacity-100 animate-star';
+    star.style.backgroundImage = 'url(/tinystar.png)';
+    star.style.top = `${Math.random() * window.innerHeight}px`;
+    star.style.left = `${Math.random() * window.innerWidth}px`;
+  
+    document.body.appendChild(star);
+  
+    // Remove the star after the animation ends
+    star.addEventListener('animationend', () => {
+      console.log('Animation ended, removing star.');
+      star.remove();
+    });
+  };
+  
+
+  // useEffect(() => {
+  //   const interval = setInterval(spawnTinyStar, 2000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   return (
     <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-2`}>
       <div className="absolute top-4 right-4 flex items-center gap-4">
-        {userEmail ? (
+        {!loading && user ? (
           <>
-            <span className="text-[18px] font-mono text-[#E4DDC4]">Welcome, {userEmail}</span>
+            <span className="text-[18px] font-mono text-[#E4DDC4]">
+              Welcome, {displayName ?? user.email}
+            </span>
             <button
               onClick={handleSignOut}
               className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
@@ -67,19 +119,24 @@ export default function HomePage() {
       </h1>
       <div className="flex flex-1">
         <div className="flex flex-row justify-between items-start">
-          {/* Left content block */}
           <div className="flex flex-col">
-            <p className="text-[104px] uppercase p-2 pt-30 mb-2 ml-30 leading-none" style={{ fontFamily: 'var(--font-vt323)' }}>
+            <p
+              className="text-[104px] uppercase p-2 pt-30 mb-2 ml-30 leading-none"
+              style={{ fontFamily: 'var(--font-vt323)' }}
+            >
               Ride the Wave <br />
               of Connection.
             </p>
-            <p className="text-[42px] uppercase p-2 mb-4 ml-30 leading-none" style={{ fontFamily: 'var(--font-vt323)' }}>
+            <p
+              className="text-[42px] uppercase p-2 mb-4 ml-30 leading-none"
+              style={{ fontFamily: 'var(--font-vt323)' }}
+            >
               Create or join an event in seconds.
             </p>
             <div className="flex gap-4 ml-32">
               <button
                 onClick={() => {
-                  if (!userEmail) {
+                  if (!user) {
                     router.push('/login');
                   } else {
                     router.push('/create-event');
@@ -89,14 +146,20 @@ export default function HomePage() {
               >
                 Create Event
               </button>
-              <Link href="/find-events" className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+              <Link
+                href="/find-events"
+                className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+              >
                 Find Events
               </Link>
             </div>
           </div>
           <div className="flex flex-col items-center mr-10 ml-50 mt-30">
             <div className="group flex flex-col items-center">
-              <div className="relative bg-[#1F1F1F] ml-10 border-[5px] border-[#E4DDC4] text-[#E4DDC4] px-4 py-3 text-4xl rounded-lg shadow-[4px_4px_0px_#000]" style={{ fontFamily: 'var(--font-vt323)' }}>
+              <div
+                className="relative bg-[#1F1F1F] ml-10 border-[5px] border-[#E4DDC4] text-[#E4DDC4] px-4 py-3 text-4xl rounded-lg shadow-[4px_4px_0px_#000]"
+                style={{ fontFamily: 'var(--font-vt323)' }}
+              >
                 <span className="block leading-tight">
                   LET&apos;S PLAN YOUR EVENT!
                 </span>

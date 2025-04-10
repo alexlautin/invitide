@@ -25,22 +25,46 @@ interface Event {
   date: string;
   location: string;
   image_url: string;
+  user_id: string;
+  profiles?: {
+    display_name: string;
+  } | null;
 }
 
 export default function FindEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchEvents();
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error('Error fetching session:', error.message);
+        setLoading(false); // Stop loading if there's an error with the session
+        return;
+      }
+
+      const currentUser = session?.user;
+      if (currentUser?.id) {
+        setUserId(currentUser.id);
+        await fetchEvents(currentUser.id); // Fetch events after session is restored
+      } else {
+        setLoading(false); // Set loading to false if there is no session
+      }
+    };
+
+    checkSession(); // Check session immediately on component mount
   }, []);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select('*, profiles(display_name)')
+        .eq('user_id', userId)
         .order('date', { ascending: true });
 
       if (error) throw error;
@@ -48,7 +72,7 @@ export default function FindEvents() {
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading when events are fetched
     }
   };
 
@@ -59,16 +83,18 @@ export default function FindEvents() {
   );
 
   return (
-    <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-8`}>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-mono font-normal uppercase">Find Events</h1>
-        <Link 
-          href="/" 
-          className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
-        >
+    <main className={`${jetBrainsMono.variable} ${vt323.variable} relative min-h-screen flex flex-col text-[#E4DDC4] p-8`}>
+      <div className="absolute inset-0 bg-[url('/7865326536812.jpeg')] bg-cover bg-center opacity-5 bl-xl z-0" />
+      <div className="relative z-10">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-mono font-normal uppercase">Find Events</h1>
+          <Link 
+            href="/" 
+            className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+          >
           Back to Home
-        </Link>
-      </div>
+          </Link>
+    </div>
       
       <div className="mb-8">
         <input
@@ -87,8 +113,35 @@ export default function FindEvents() {
           {filteredEvents.map((event) => (
             <div
               key={event.id}
-              className="bg-[#1F1F1F] border-[4px] border-[#E4DDC4] rounded-lg overflow-hidden hover:transform hover:scale-105 transition-transform duration-300 shadow-[4px_4px_0px_#000]"
+              onClick={() => {
+                const eventUrl = `${window.location.origin}/event/${event.id}`;
+                navigator.clipboard.writeText(eventUrl).then(() => {
+                  console.log('Copied:', eventUrl);
+                }).catch(err => {
+                  console.error('Failed to copy:', err);
+                });
+              }}
+              className="cursor-pointer bg-[#1F1F1F] border-[4px] border-[#E4DDC4] rounded-lg overflow-hidden hover:transform hover:scale-105 transition-transform duration-300 shadow-[4px_4px_0px_#000]"
             >
+              <div className="flex justify-between items-center px-4 pt-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevent triggering the card copy
+                    const eventUrl = `${window.location.origin}/event/${event.id}`;
+                    navigator.clipboard.writeText(eventUrl).then(() => {
+                      console.log('Copied:', eventUrl);
+                    }).catch(err => {
+                      console.error('Failed to copy:', err);
+                    });
+                  }}
+                  className="text-xs uppercase font-mono text-[#1F1F1F] bg-[#E4DDC4] px-2 py-1 rounded hover:bg-[#ccc] transition"
+                >
+                  Copy Link
+                </button>
+                <span className="text-sm text-[#E4DDC4] font-mono">
+                  @{event.profiles?.display_name ?? 'anonymous'}
+                </span>
+              </div>
               {event.image_url && (
                 <img
                   src={event.image_url}
@@ -116,6 +169,7 @@ export default function FindEvents() {
           No events found matching your search.
         </div>
       )}
+      </div>
     </main>
   );
-} 
+}

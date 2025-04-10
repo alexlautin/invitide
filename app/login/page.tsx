@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const verified = searchParams.get('verified');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +23,30 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
     } else {
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user?.id) {
+          const userId = session.user.id;
+
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', userId)
+            .single();
+
+          if (!existingProfile) {
+            const displayName = session.user.user_metadata?.display_name || 'Anonymous';
+            const { error: profileError } = await supabase.from('profiles').insert([
+              {
+                id: userId,
+                display_name: displayName,
+              },
+            ]);
+            if (profileError) {
+              console.error('Failed to insert profile after login:', profileError.message);
+            }
+          }
+        }
+      });
       router.push('/');
     }
   };
@@ -41,6 +67,11 @@ export default function LoginPage() {
       </Link>
       <div className="border-[#E4DDC4] border-[5px] p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl text-[#E4DDC4] font-semibold mb-6">Login</h1>
+        {verified === 'true' && (
+          <p className="mb-4 text-green-500 font-medium text-center">
+            Email verified! You can now log in.
+          </p>
+        )}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block mb-1 text-sm font-medium text-[#E4DDC4]">Email</label>

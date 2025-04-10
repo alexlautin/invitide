@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -12,23 +12,46 @@ export default function CreateEventPage() {
     const [eventDate, setEventDate] = useState('');
     const [location, setLocation] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true); // Add loading state for initial load
+    const [user, setUser] = useState<any>(null); // User state to store the authenticated user
+
+    useEffect(() => {
+        const fetchSession = async () => {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            
+            if (error) {
+                console.error('Error fetching session:', error.message);
+                setLoading(false);  // Set loading to false if error occurs
+                return;
+            }
+            
+            if (session?.user) {
+                setUser(session.user);  // Store user info in state
+            }
+            
+            setLoading(false); // Stop loading once session is checked
+        };
+        
+        fetchSession(); // Check session on initial page load
+    }, []);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          
-          const { data, error } = await supabase
+        if (!user) {
+            setError("You must be signed in to create an event.");
+            return;
+        }
+
+        const { data, error } = await supabase
             .from('events')
             .insert([
-              {
-                name: eventName,
-                date: new Date(eventDate).toISOString().slice(0, 10),
-                location: location,
-                user_id: user?.id,
-              },
+                {
+                    name: eventName,
+                    date: new Date(eventDate).toISOString().slice(0, 10),
+                    location: location,
+                    user_id: user?.id,
+                },
             ])
             .select()
             .single();
@@ -39,6 +62,10 @@ export default function CreateEventPage() {
             router.push(`/event/${data.id}`);
         }
     };
+
+    if (loading) {
+        return <div>Loading...</div>; // Show loading screen until session is verified
+    }
 
     return (
         <main className="min-h-screen flex flex-col items-center justify-center bg-[#1F1F1F] text-[#E4DDC4] p-8 font-mono">

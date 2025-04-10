@@ -13,24 +13,64 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [username, setUsername] = useState('');
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!username || !email || !password || !confirmPassword) {
+      setError('All fields are required');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          display_name: username,
+        },
+      },
     });
-    if (error) {
-      setError(error.message);
-    } else {
-      router.push('/login');
+
+    if (signUpError) {
+      setError(signUpError.message);
+      return;
     }
+
+    let userId = signUpData.user?.id;
+
+    if (!userId) {
+      const { data: userData } = await supabase.auth.getUser();
+      userId = userData?.user?.id;
+    }
+
+    if (!userId) {
+      setError('Signup succeeded, but could not retrieve user ID.');
+      return;
+    }
+
+    console.log('Inserting profile with userId:', userId, 'and displayName:', username);
+    const { error: profileError } = await supabase.from('profiles').insert([
+      {
+        id: userId,
+        display_name: username,
+      },
+    ]);
+
+    if (profileError) {
+      setError('Signup succeeded, but profile creation failed.');
+      console.error('Profile insert error:', profileError.message);
+      return;
+    }
+
+    console.log('Profile insert succeeded.');
+    router.push('/login');
   };
 
   const handleGitHubSignup = async () => {
@@ -50,6 +90,16 @@ export default function SignupPage() {
       <div className="border-[#E4DDC4] border-[5px] p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl text-[#E4DDC4] font-semibold mb-6">Sign Up</h1>
         <form onSubmit={handleSignup} className="space-y-4">
+          <div>
+            <label className="block mb-1 text-sm font-medium text-[#E4DDC4]">Display Name</label>
+            <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              required
+              className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <div>
             <label className="block mb-1 text-sm font-medium text-[#E4DDC4]">Email</label>
             <input
