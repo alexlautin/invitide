@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -75,7 +76,14 @@ export default function SignupPage() {
             onClick={handleGitHubSignup}
             className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
           >
-            <span className="text-xl">🐙</span> Sign up with GitHub
+            <Image
+              src="/github_logo.png"
+              alt="GitHub Logo"
+              width={18}
+              height={18}
+              className="self-center brightness-0 saturate-100 invert sepia hue-rotate-[325deg] contrast-125"
+            />
+            Sign up with GitHub
           </button>
         </div>
       </div>
