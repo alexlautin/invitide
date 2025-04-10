@@ -1,7 +1,10 @@
-import React from 'react';
+'use client';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
+import { supabase } from '@/lib/supabaseClient';
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -16,18 +19,45 @@ const vt323 = VT323({
 });
 
 export default function HomePage() {
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUserEmail(session?.user.email ?? null);
+    };
+
+    fetchSession();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUserEmail(null);
+  };
+
   return (
     <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-2`}>
-      <div className="absolute top-4 right-4 flex gap-4">
-        <button className="border-[4px] text-[25px] font-mono font-normal border-[#E4DDC4] px-4 py-0 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
-          Login
-        </button>
-        <button className="border-[4px] text-[25px] font-mono font-normal border-[#E4DDC4] px-4 py-0 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
-          Sign Up
-        </button>
-        <button className="border-[4px] text-[25px] font-mono font-normal border-[#E4DDC4] px-4 py-0 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
-          Go
-        </button>
+      <div className="absolute top-4 right-4 flex items-center gap-4">
+        {userEmail ? (
+          <>
+            <span className="text-[18px] font-mono text-[#E4DDC4]">Welcome, {userEmail}</span>
+            <button
+              onClick={handleSignOut}
+              className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+            >
+              Sign Out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="border-[4px] text-[25px] font-mono font-normal border-[#E4DDC4] px-4 py-0 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+              Login
+            </Link>
+            <Link href="/signup" className="border-[4px] text-[25px] font-mono font-normal border-[#E4DDC4] px-4 py-0 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+              Sign Up
+            </Link>
+          </>
+        )}
       </div>
       <h1 className="text-4xl font-mono font-normal p-2 uppercase mb-8">
         Invitide
@@ -54,6 +84,7 @@ export default function HomePage() {
           </div>
           <div className="flex flex-col items-center mr-10 ml-50 mt-30">
             <div className="relative bg-[#1F1F1F] ml-10 border-[5px] border-[#E4DDC4] text-[#E4DDC4] px-4 py-3 text-4xl rounded-lg shadow-[4px_4px_0px_#000]" style={{ fontFamily: 'var(--font-vt323)' }}>
+              {/* Speech bubble inspiration: https://nicolasgallagher.com/pure-css-speech-bubbles/demo/default.css */}
               <span className="block leading-tight">
                 LET&apos;S PLAN YOUR EVENT!
               </span>
