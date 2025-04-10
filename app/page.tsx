@@ -93,6 +93,9 @@ export default function HomePage() {
       <div className="absolute top-4 right-4 flex items-center gap-4">
         {!loading && user ? (
           <>
+            <Link href="/profile" className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+              Profile
+            </Link>
             <span className="text-[18px] font-mono text-[#E4DDC4]">
               Welcome, {displayName ?? user.email}
             </span>
