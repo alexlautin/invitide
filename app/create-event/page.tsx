@@ -14,6 +14,7 @@ export default function CreateEventPage() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true); // Add loading state for initial load
     const [user, setUser] = useState<any>(null); // User state to store the authenticated user
+    const [eventTime, setEventTime] = useState('');
 
     useEffect(() => {
         const fetchSession = async () => {
@@ -42,13 +43,17 @@ export default function CreateEventPage() {
             setError("You must be signed in to create an event.");
             return;
         }
+        const eventDateTime = eventTime
+            ? new Date(`${eventDate}T${eventTime}`).toISOString()
+            : new Date(`${eventDate}T00:00`).toISOString();
+        console.log('Creating event with datetime:', eventDateTime);
 
         const { data, error } = await supabase
             .from('events')
             .insert([
                 {
                     name: eventName,
-                    date: new Date(eventDate).toISOString().slice(0, 10),
+                    date: eventDateTime,
                     location: location,
                     user_id: user?.id,
                 },
@@ -95,6 +100,15 @@ export default function CreateEventPage() {
                                 required
                                 value={eventDate}
                                 onChange={(e) => setEventDate(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 bg-[#1F1F1F] text-[#E4DDC4] rounded-md focus:outline-none focus:ring-2 focus:ring-[#E4DDC4]"
+                            />
+                        </div>
+                        <div>
+                            <label className="block mb-1 text-md uppercase">Time (Optional)</label>
+                            <input
+                                type="time"
+                                value={eventTime}
+                                onChange={(e) => setEventTime(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 bg-[#1F1F1F] text-[#E4DDC4] rounded-md focus:outline-none focus:ring-2 focus:ring-[#E4DDC4]"
                             />
                         </div>

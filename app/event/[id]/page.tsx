@@ -103,20 +103,27 @@ export default function EventPage({ params }: { params: { id: string } }) {
               {event.name}
             </h1>
 
-            <div className="mb-6">
-              <p className="text-lg mb-4">{event.description}</p>
-              <div className="flex flex-col gap-2">
-                <p className="text-[#E4DDC4]">
-                  <span className="font-semibold">Date:</span> {new Date(event.date).toLocaleDateString()}
-                </p>
-                <p className="text-[#E4DDC4]">
-                  <span className="font-semibold">Location:</span> {event.location}
-                </p>
-                <p className="text-[#E4DDC4]">
-                  <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
-                </p>
-              </div>
+          <div className="mb-6">
+            <p className="text-lg mb-4">{event.description}</p>
+            <div className="flex flex-col gap-2">
+              <p className="text-[#E4DDC4]">
+                  <span className="font-semibold">Date & Time:</span>{' '}
+                  {new Date(event.date).toLocaleString(undefined, {
+                    weekday: 'long',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                  })}
+              </p>
+              <p className="text-[#E4DDC4]">
+                <span className="font-semibold">Location:</span> {event.location}
+              </p>
+              <p className="text-[#E4DDC4]">
+                <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
+              </p>
             </div>
+          </div>
 
             <button
               onClick={() => {
