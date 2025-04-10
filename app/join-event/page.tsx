@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 import { supabase } from '@/lib/supabaseClient';
-import './customCursor.css';
+import '../customCursor.css';
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -67,16 +67,21 @@ export default function HomePage() {
         <div className="flex flex-row justify-between items-start">
           {/* Left content block */}
           <div className="flex flex-col">
-            <p className="text-[104px] uppercase p-2 pt-30 mb-2 ml-30 leading-none" style={{ fontFamily: 'var(--font-vt323)' }}>
-              Ride the Wave <br />
-              of Connection.
+          <p className="text-[42px] uppercase p-2 mb-4 ml-30 pt-20 leading-none" style={{ fontFamily: 'var(--font-vt323)' }}>
+              Enter Invite Code
+            </p>
+            <p className="text-[104px] uppercase p-2 pt-0 mb-2 ml-30 leading-none" style={{ fontFamily: 'var(--font-vt323)' }}>
+              Enter Your <br />
+              Invite Code.
             </p>
             <p className="text-[42px] uppercase p-2 mb-4 ml-30 leading-none" style={{ fontFamily: 'var(--font-vt323)' }}>
               Create or join an event in seconds.
             </p>
             <div className="flex gap-4 ml-32">
-              <Link href="/create-event" className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+              <Link href="/create-event">
+              <button className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
                 Create Event
+              </button>
               </Link>
               <button className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
                 Join Event
@@ -92,7 +97,7 @@ export default function HomePage() {
                 <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
                 <div className="absolute bottom-[-11px] left-[calc(50%-11px)] w-0 h-0 border-l-[11px] border-r-[11px] border-t-[11px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
               </div>
-              <Image
+              <Image 
                 src="/logo.png"
                 alt="logo"
                 width={300}
