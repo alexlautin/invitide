@@ -75,9 +75,9 @@ export default function HomePage() {
               Create or join an event in seconds.
             </p>
             <div className="flex gap-4 ml-32">
-              <button className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+              <Link href="/create-event" className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
                 Create Event
-              </button>
+              </Link>
               <button className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
                 Join Event
               </button>
@@ -92,7 +92,7 @@ export default function HomePage() {
                 <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
                 <div className="absolute bottom-[-11px] left-[calc(50%-11px)] w-0 h-0 border-l-[11px] border-r-[11px] border-t-[11px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
               </div>
-              <Image 
+              <Image
                 src="/logo.png"
                 alt="logo"
                 width={300}
