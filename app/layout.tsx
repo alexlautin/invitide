@@ -29,6 +29,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <div className="noise-overlay">{children}</div>
+        <Analytics />
       </body>
     </html>
   );
