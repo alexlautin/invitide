@@ -27,10 +27,7 @@ interface Event {
 interface Attendee {
   id: string;
   user_id: string;
-  profiles: {
-    display_name: string;
-    email: string;
-  };
+  display_name: string;
 }
 
 export default function EventPage() {
@@ -45,7 +42,6 @@ export default function EventPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isRSVPed, setIsRSVPed] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [isHost, setIsHost] = useState(false);
 
@@ -85,12 +81,27 @@ export default function EventPage() {
 
           // If user is host, fetch attendees
           if (user.id === data.user_id) {
-            const { data: attendeesData } = await supabase
+            const { data: attendeesRaw, error: attendeesError } = await supabase
               .from('event_attendees')
-              .select('*, profiles(display_name, email)')
+              .select('user_id')
               .eq('event_id', id);
 
-            setAttendees(attendeesData || []);
+            if (attendeesError) throw attendeesError;
+            const userIds = attendeesRaw?.map(a => a.user_id) ?? [];
+
+            const { data: profilesData, error: profilesError } = await supabase
+              .from('profiles')
+              .select('id, display_name')
+              .in('id', userIds as string[]);
+
+            if (profilesError) throw profilesError;
+            const mappedAttendees = profilesData.map(profile => ({
+              id: profile.id,
+              user_id: profile.id,
+              display_name: profile.display_name,
+            }));
+
+            setAttendees(mappedAttendees);
           }
         }
       } catch (err) {
@@ -212,8 +223,7 @@ export default function EventPage() {
                         className="flex items-center justify-between bg-[#1F1F1F] border-2 border-[#E4DDC4] p-3 rounded"
                       >
                         <div>
-                          <p className="font-mono">@{attendee.profiles.display_name}</p>
-                          <p className="text-sm text-[#E4DDC4]/70">{attendee.profiles.email}</p>
+                          <p className="font-mono">@{attendee.display_name}</p>
                         </div>
                       </div>
                     ))}
@@ -240,7 +250,7 @@ export default function EventPage() {
                   const eventUrl = `${window.location.origin}/event/${event.id}`;
                   navigator.clipboard.writeText(eventUrl).then(() => {
                     setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
+                    setTimeout(() => setCopied(false), 2000); // hide after 3s
                   });
                 }}
                 className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
