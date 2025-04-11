@@ -44,6 +44,7 @@ export default function EventPage() {
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [joinedUsers, setJoinedUsers] = useState<Attendee[]>([]);
   const [scanning, setScanning] = useState(false);
+  const [scanStatus, setScanStatus] = useState('');
   const [isHost, setIsHost] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -172,8 +173,11 @@ export default function EventPage() {
         if (error) throw error;
         setIsRSVPed(true);
       }
-    } catch (_err) {
-      console.error('Error updating RSVP status', _err);
+    } catch (err) {
+      console.error('❌ Error updating RSVP status:', err);
+      if (err instanceof Error) {
+        console.error('🔍 Message:', err.message);
+      }
     }
   };
 
@@ -216,25 +220,37 @@ export default function EventPage() {
     let scanner: QrScanner | null = null;
 
     const startScanner = async () => {
+      setScanStatus('Scanning in progress...');
       scanner = new QrScanner(
         video,
         async (result: string) => {
           console.log('Scanned result:', result);
-          setScanning(false);
+          setScanStatus('Processing scanned data...');
           const scannedUserId = result;
 
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from('event_attendees')
-            .insert({ event_id: id, user_id: scannedUserId });
+            .upsert(
+              { event_id: id, user_id: scannedUserId },
+              { onConflict: ['event_id', 'user_id'] }
+            );
 
-          if (!error) {
-            const { data: profile } = await supabase
+          if (error) {
+            console.error('🔥 Supabase upsert failed:', error);
+            setScanStatus('Error adding attendee.');
+          } else {
+            console.log('✅ Supabase upsert result:', data);
+
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('id, display_name')
               .eq('id', scannedUserId)
               .single();
 
-            if (profile) {
+            if (profileError) {
+              console.error('⚠️ Failed to fetch profile:', profileError);
+              setScanStatus('User profile not found.');
+            } else if (profile) {
               setJoinedUsers(prev => [
                 ...prev,
                 {
@@ -243,11 +259,17 @@ export default function EventPage() {
                   display_name: profile.display_name,
                 },
               ]);
+              setScanStatus('Scan successful!');
             }
           }
+          
+          setTimeout(() => {
+            setScanning(false);
+          }, 1000);
         }
       );
 
+      setScanStatus('Scan a QR code');
       await scanner.start();
     };
 
@@ -358,8 +380,8 @@ export default function EventPage() {
                   <button
                     onClick={handleRSVP}
                     className={`flex-1 border-[4px] text-[18px] font-mono px-4 py-2 uppercase transition duration-300 ${isRSVPed
-                        ? 'bg-[#E4DDC4] text-[#1F1F1F]'
-                        : 'border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
+                      ? 'bg-[#E4DDC4] text-[#1F1F1F]'
+                      : 'border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
                       }`}
                   >
                     {isRSVPed ? 'Cancel RSVP' : 'RSVP'}
@@ -376,6 +398,60 @@ export default function EventPage() {
                   className="flex-1 border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                 >
                   Copy Event Link
+                </button>
+
+              </div>
+              <div className="mt-2">
+                <button
+                  onClick={() => {
+                    if (!event) return;
+
+                  const pad = (n: number) => n.toString().padStart(2, '0');
+                  
+                  const formatDate = (date: Date) => {
+                    return (
+                      date.getUTCFullYear().toString() +
+                      pad(date.getUTCMonth() + 1) +
+                      pad(date.getUTCDate()) +
+                      'T' +
+                      pad(date.getUTCHours()) +
+                      pad(date.getUTCMinutes()) +
+                      pad(date.getUTCSeconds()) +
+                      'Z'
+                    );
+                  };
+                  
+                  const now = new Date();
+                  const start = new Date(event.date);
+                  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // 2-hour default duration
+                  
+                  const icsContent = [
+                    'BEGIN:VCALENDAR',
+                    'VERSION:2.0',
+                    'CALSCALE:GREGORIAN',
+                    'BEGIN:VEVENT',
+                    `UID:${event.id}@invitide`,
+                    `SUMMARY:${event.name}`,
+                    `DESCRIPTION:${event.description || ''}`,
+                    `LOCATION:${event.location}`,
+                    `DTSTAMP:${formatDate(now)}`,
+                    `DTSTART:${formatDate(start)}`,
+                    `DTEND:${formatDate(end)}`,
+                    'END:VEVENT',
+                    'END:VCALENDAR'
+                  ].join('\r\n');
+
+                    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${event.name.replace(/\\s+/g, '_')}.ics`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                >
+                  Add to Calendar
                 </button>
               </div>
               {isHost && (
@@ -423,7 +499,13 @@ export default function EventPage() {
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
           <div className="bg-[#1F1F1F] p-6 rounded-lg border-4 border-[#E4DDC4]">
             <h2 className="text-xl font-mono mb-4 text-center">Scan QR Code</h2>
+            {scanStatus && (
+              <div className="text-center mb-2 font-mono text-lg text-[#E4DDC4]">
+                {scanStatus}
+              </div>
+            )}
             <video id="qr-video" className="w-full max-w-sm border border-[#E4DDC4] rounded"></video>
+            <p className="mt-4 text-center text-[#E4DDC4]">{scanStatus}</p>
             <button onClick={() => setScanning(false)} className="mt-4 w-full border-[4px] text-[18px] font-mono border-red-500 text-red-500 px-4 py-2 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition duration-300">Cancel</button>
           </div>
         </div>
