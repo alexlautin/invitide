@@ -104,7 +104,7 @@ export default function HomePage() {
             <>
               <Link 
                 href="/profile" 
-                className="border-[2px] sm:border-[4px] text-[14px] sm:text-[16px] font-mono border-[#E4DDC4] px-2 sm:px-3 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 min-w-[80px] max-w-[150px] overflow-hidden h-[32px] flex items-center"
+                className="border-[2px] sm:border-[4px] text-[14px] sm:text-[16px] font-mono border-[#E4DDC4] px-1 sm:px-2 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 min-w-[80px] max-w-[150px] overflow-hidden h-[32px] flex items-center"
               >
                 {displayName && displayName.length > 12 ? (
                   <ScrollingText text={displayName} />
