@@ -18,6 +18,26 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "INVITIDE",
   description: "Ride the Wave of Connection.",
+  openGraph: {
+    type: 'website',
+    title: 'INVITIDE',
+    description: 'Ride the Wave of Connection.',
+    siteName: 'INVITIDE',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'INVITIDE - Event Planning Platform',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'INVITIDE',
+    description: 'Ride the Wave of Connection.',
+    images: ['/og-image.png'],
+  },
 };
 
 export default function RootLayout({

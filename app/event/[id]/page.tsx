@@ -1,4 +1,5 @@
 'use client';
+import Head from 'next/head';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -323,8 +324,21 @@ export default function EventPage() {
   }
 
   return (
-    <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-8`}>
-      <Link href="/my-events" className="absolute top-4 left-4 text-[#E4DDC4] hover:underline text-2xl">← Back to Events</Link>
+    <>
+      <Head>
+        <title>{event.name} | Invitide</title>
+        <meta property="og:title" content={event.name} />
+        <meta property="og:description" content={`Join us on ${new Date(event.date).toLocaleString()}`} />
+        <meta property="og:image" content={event.image_url} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`https://invitide.com/event/${event.id}`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={event.name} />
+        <meta name="twitter:description" content={`Join us on ${new Date(event.date).toLocaleString()}`} />
+        <meta name="twitter:image" content={event.image_url} />
+      </Head>
+      <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-8`}>
+        <Link href="/my-events" className="absolute top-4 left-4 text-[#E4DDC4] hover:underline text-2xl">← Back to Events</Link>
 
       <div className="flex flex-1 items-center justify-center">
         <div className="max-w-2xl w-full px-4">
@@ -553,6 +567,7 @@ export default function EventPage() {
           Event link copied to clipboard!
         </div>
       )}
-    </main>
+      </main>
+    </>
   );
 }
