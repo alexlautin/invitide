@@ -215,7 +215,7 @@ export default function EventPage() {
   useEffect(() => {
     if (!scanning) return;
 
-    let scanner: any = null;
+    let scanner: QrScanner | null = null;
     const video = document.getElementById('qr-video') as HTMLVideoElement;
 
     (async () => {
