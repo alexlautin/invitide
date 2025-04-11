@@ -262,7 +262,7 @@ export default function EventPage() {
               setScanStatus('Scan successful!');
             }
           }
-          
+
           setTimeout(() => {
             setScanning(false);
           }, 1000);
@@ -302,12 +302,17 @@ export default function EventPage() {
               <Image src={event.image_url} alt={event.name} width={800} height={400} className="w-full h-64 object-cover rounded-lg" />
             )}
 
-            <h1 className="text-4xl mb-4" style={{ fontFamily: 'var(--font-vt323)' }}>{event.name}</h1>
+            <div className="relative border-[5px] border-[#E4DDC4] px-4 py-3 text-xl sm:text-2xl md:text-4xl rounded-lg shadow-[4px_4px_0px_#000] text-center font-[var(--font-jetbrains-mono)]" style={{ textShadow: '2px 2px 0px #000' }}>
+              <span className="block">LET&apos;S PLAN YOUR EVENT!</span>
+              <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
+            </div>
+
+            <h1 className="text-4xl mb-4 font-[var(--font-vt323)]" style={{ textShadow: '2px 2px 0px #000' }}>{event.name}</h1>
 
             <div className="mb-6">
-              <p className="text-lg mb-4">{event.description}</p>
+              <p className="text-lg mb-4 font-[var(--font-jetbrains-mono)]">{event.description}</p>
               <div className="flex flex-col gap-2">
-                <p className="text-[#E4DDC4]">
+                <p className="text-[#E4DDC4] font-[var(--font-jetbrains-mono)]">
                   <span className="font-semibold">Date & Time:</span>{' '}
                   {new Date(event.date).toLocaleString(undefined, {
                     weekday: 'long',
@@ -317,10 +322,10 @@ export default function EventPage() {
                     minute: '2-digit',
                   })}
                 </p>
-                <p className="text-[#E4DDC4]">
+                <p className="text-[#E4DDC4] font-[var(--font-jetbrains-mono)]">
                   <span className="font-semibold">Location:</span> {event.location}
                 </p>
-                <p className="text-[#E4DDC4]">
+                <p className="text-[#E4DDC4] font-[var(--font-jetbrains-mono)]">
                   <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
                 </p>
               </div>
@@ -329,7 +334,7 @@ export default function EventPage() {
             {/* Attendees Section - Only visible to host */}
             {isHost && (
               <div className="mb-6">
-                <h2 className="text-2xl font-mono mb-4">Attendees ({attendees.length})</h2>
+                <h2 className="text-2xl font-[var(--font-jetbrains-mono)] mb-4">Attendees ({attendees.length})</h2>
                 {attendees.length > 0 ? (
                   <div className="space-y-2">
                     {attendees.map((attendee) => (
@@ -338,13 +343,13 @@ export default function EventPage() {
                         className="flex items-center justify-between bg-[#1F1F1F] border-2 border-[#E4DDC4] p-3 rounded"
                       >
                         <div>
-                          <p className="font-mono">@{attendee.display_name}</p>
+                          <p className="font-[var(--font-jetbrains-mono)]">@{attendee.display_name}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-lg">No attendees yet.</p>
+                  <p className="text-lg font-[var(--font-jetbrains-mono)]">No attendees yet.</p>
                 )}
               </div>
             )}
@@ -352,17 +357,17 @@ export default function EventPage() {
             {/* Joined Users Section - Only visible to host */}
             {isHost && (
               <div className="mb-6">
-                <h2 className="text-2xl font-mono mb-4">Joined Users ({joinedUsers.length})</h2>
+                <h2 className="text-2xl font-[var(--font-jetbrains-mono)] mb-4">Joined Users ({joinedUsers.length})</h2>
                 {joinedUsers.length > 0 ? (
                   <div className="space-y-2">
                     {joinedUsers.map((user) => (
                       <div key={user.id} className="flex items-center justify-between bg-[#1F1F1F] border-2 border-[#E4DDC4] p-3 rounded">
-                        <p className="font-mono">@{user.display_name}</p>
+                        <p className="font-[var(--font-jetbrains-mono)]">@{user.display_name}</p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-lg">No joined users yet.</p>
+                  <p className="text-lg font-[var(--font-jetbrains-mono)]">No joined users yet.</p>
                 )}
               </div>
             )}
@@ -406,40 +411,40 @@ export default function EventPage() {
                   onClick={() => {
                     if (!event) return;
 
-                  const pad = (n: number) => n.toString().padStart(2, '0');
-                  
-                  const formatDate = (date: Date) => {
-                    return (
-                      date.getUTCFullYear().toString() +
-                      pad(date.getUTCMonth() + 1) +
-                      pad(date.getUTCDate()) +
-                      'T' +
-                      pad(date.getUTCHours()) +
-                      pad(date.getUTCMinutes()) +
-                      pad(date.getUTCSeconds()) +
-                      'Z'
-                    );
-                  };
-                  
-                  const now = new Date();
-                  const start = new Date(event.date);
-                  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // 2-hour default duration
-                  
-                  const icsContent = [
-                    'BEGIN:VCALENDAR',
-                    'VERSION:2.0',
-                    'CALSCALE:GREGORIAN',
-                    'BEGIN:VEVENT',
-                    `UID:${event.id}@invitide`,
-                    `SUMMARY:${event.name}`,
-                    `DESCRIPTION:${event.description || ''}`,
-                    `LOCATION:${event.location}`,
-                    `DTSTAMP:${formatDate(now)}`,
-                    `DTSTART:${formatDate(start)}`,
-                    `DTEND:${formatDate(end)}`,
-                    'END:VEVENT',
-                    'END:VCALENDAR'
-                  ].join('\r\n');
+                    const pad = (n: number) => n.toString().padStart(2, '0');
+
+                    const formatDate = (date: Date) => {
+                      return (
+                        date.getUTCFullYear().toString() +
+                        pad(date.getUTCMonth() + 1) +
+                        pad(date.getUTCDate()) +
+                        'T' +
+                        pad(date.getUTCHours()) +
+                        pad(date.getUTCMinutes()) +
+                        pad(date.getUTCSeconds()) +
+                        'Z'
+                      );
+                    };
+
+                    const now = new Date();
+                    const start = new Date(event.date);
+                    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // 2-hour default duration
+
+                    const icsContent = [
+                      'BEGIN:VCALENDAR',
+                      'VERSION:2.0',
+                      'CALSCALE:GREGORIAN',
+                      'BEGIN:VEVENT',
+                      `UID:${event.id}@invitide`,
+                      `SUMMARY:${event.name}`,
+                      `DESCRIPTION:${event.description || ''}`,
+                      `LOCATION:${event.location}`,
+                      `DTSTAMP:${formatDate(now)}`,
+                      `DTSTART:${formatDate(start)}`,
+                      `DTEND:${formatDate(end)}`,
+                      'END:VEVENT',
+                      'END:VCALENDAR'
+                    ].join('\r\n');
 
                     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
                     const link = document.createElement('a');
