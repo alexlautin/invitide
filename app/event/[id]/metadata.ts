@@ -9,17 +9,26 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const { data: event } = await supabase
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+
+  if (!id) {
+    return {
+      title: 'Invalid Event',
+      description: 'No event ID provided.',
+    };
+  }
+
+  const { data: event, error } = await supabase
     .from('events')
-    .select('name, description, date, image_url')
-    .eq('id', params.id)
+    .select('id, name, date, location')
+    .eq('id', id)
     .single();
 
-  if (!event) {
+  if (error || !event) {
     return {
-      title: 'Event Not Found | Invitide',
-      description: 'Sorry, this event does not exist.',
+      title: 'Event Not Found',
+      description: 'Sorry, this event could not be found.',
     };
   }
 
@@ -31,27 +40,33 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     minute: '2-digit',
   });
 
-  return {
+  const metaDescription = `Join us on ${formattedDate} at ${event.location}`;
+
+  const metadata = {
     title: `${event.name} | Invitide`,
-    description: event.description || `Join us on ${formattedDate}`,
+    description: metaDescription,
     openGraph: {
       title: event.name,
-      description: event.description || `Join us on ${formattedDate}`,
-      url: `https://invitide.com/event/${params.id}`,
+      description: metaDescription,
+      url: `https://invitide.com/event/${id}`,
       images: [
         {
-          url: event.image_url || 'https://invitide.com/og-event.png',
+          url: 'https://invitide.com/og-event.png',
           width: 1200,
           height: 630,
           alt: event.name,
         },
       ],
+      type: 'website',
+      siteName: 'Invitide',
     },
     twitter: {
       card: 'summary_large_image',
       title: event.name,
-      description: event.description || `Join us on ${formattedDate}`,
-      images: [event.image_url || 'https://invitide.com/og-event.png'],
+      description: metaDescription,
+      images: ['https://invitide.com/og-event.png'],
     },
   };
+
+  return metadata;
 }

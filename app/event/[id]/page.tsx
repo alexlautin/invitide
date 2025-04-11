@@ -1,11 +1,12 @@
 'use client';
+import { use } from 'react';
 import Head from 'next/head';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import QrScanner from 'qr-scanner';
 
@@ -32,8 +33,10 @@ interface Attendee {
   display_name: string;
 }
 
-export default function EventPage() {
-  const params = useParams();
+export default function EventPage({ params: rawParams }: { params: Promise<{ id: string }> }) {
+  const params = use(rawParams);
+  console.log('Rendering EventPage for event ID:', params.id);
+
   const router = useRouter();
   const id = params?.id as string;
 

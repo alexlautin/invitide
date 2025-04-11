@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react"
@@ -13,34 +12,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-export const metadata: Metadata = {
-  title: "INVITIDE",
-  description: "Ride the Wave of Connection.",
-  openGraph: {
-    type: 'website',
-    title: 'INVITIDE',
-    description: 'Ride the Wave of Connection.',
-    siteName: 'INVITIDE',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'INVITIDE - Event Planning Platform',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'INVITIDE',
-    description: 'Ride the Wave of Connection.',
-    images: ['/og-image.png'],
-  },
-  icons: {
-    icon: "/favicon.ico",
-  },
-};
 
 export default function RootLayout({
   children,
