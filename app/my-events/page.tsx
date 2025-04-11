@@ -39,7 +39,6 @@ export default function MyEventsPage() {
   const [attendingEvents, setAttendingEvents] = useState<Event[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -51,7 +50,6 @@ export default function MyEventsPage() {
       }
 
       const userId = session.user.id;
-      setUserId(userId);
 
       const [{ data: hosting }, { data: attendingIds }] = await Promise.all([
         supabase

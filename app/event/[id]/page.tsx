@@ -37,16 +37,13 @@ export default function EventPage() {
 
   const [event, setEvent] = useState<Event | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [isAttending, setIsAttending] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isRSVPed, setIsRSVPed] = useState(false);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [isHost, setIsHost] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [cameFromProfile, setCameFromProfile] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -107,8 +104,8 @@ export default function EventPage() {
             setAttendees(mappedAttendees);
           }
         }
-      } catch (err) {
-        setError('Error fetching event details');
+      } catch (_err) {
+        console.error('Error fetching event details,', _err);
       } finally {
         setLoading(false);
       }
@@ -116,14 +113,6 @@ export default function EventPage() {
 
     fetchEvent();
   }, [id, user]);
-
-  useEffect(() => {
-    // Check if user came from profile page
-    if (typeof window !== 'undefined') {
-      const referrer = document.referrer;
-      setCameFromProfile(referrer.includes('/profile'));
-    }
-  }, []);
 
   const handleRSVP = async () => {
     if (!user) {
@@ -156,8 +145,8 @@ export default function EventPage() {
         if (error) throw error;
         setIsRSVPed(true);
       }
-    } catch (err) {
-      setError('Error updating RSVP status');
+    } catch (_err) {
+      console.error('Error updating RSVP status', _err);
     }
   };
 
@@ -185,30 +174,10 @@ export default function EventPage() {
 
       // Redirect to profile page after successful deletion
       router.push('/my-events');
-    } catch (err) {
-      setError('Error deleting event');
+    } catch (_err) {
+      console.error('Error deleting event', _err);
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  
-
-  const handleToggleRSVP = async () => {
-    if (!user || !event) return;
-
-    if (isAttending) {
-      await supabase
-        .from('event_attendees')
-        .delete()
-        .eq('event_id', event.id)
-        .eq('user_id', user.id);
-      setIsAttending(false);
-    } else {
-      await supabase
-        .from('event_attendees')
-        .insert({ event_id: event.id, user_id: user.id });
-      setIsAttending(true);
     }
   };
 
