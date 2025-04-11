@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import Image from 'next/image'; // Make sure this is imported at the top
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
@@ -34,30 +34,118 @@ interface Event {
   } | null;
 }
 
+interface Attendee {
+  id: string;
+  user_id: string;
+  profiles: {
+    display_name: string;
+    email: string;
+  };
+}
+
 export default function EventPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
 
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error] = useState<string | null>(null);  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [isRSVPed, setIsRSVPed] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [attendees, setAttendees] = useState<Attendee[]>([]);
+  const [isHost, setIsHost] = useState(false);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+
+    checkSession();
+  }, []);
 
   useEffect(() => {
     if (!id) return;
     const fetchEvent = async () => {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*, profiles(display_name)')
-        .eq('id', id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('*, profiles(display_name)')
+          .eq('id', id)
+          .single();
 
-      if (error) throw error;
-      setEvent(data);
-      setLoading(false);
+        if (error) throw error;
+        setEvent(data);
+
+        // Check if user has RSVPed
+        if (user) {
+          const { data: rsvpData } = await supabase
+            .from('event_attendees')
+            .select('*')
+            .eq('event_id', id)
+            .eq('user_id', user.id)
+            .single();
+
+          setIsRSVPed(!!rsvpData);
+          setIsHost(user.id === data.user_id);
+
+          // If user is host, fetch attendees
+          if (user.id === data.user_id) {
+            const { data: attendeesData } = await supabase
+              .from('event_attendees')
+              .select('*, profiles(display_name, email)')
+              .eq('event_id', id);
+
+            setAttendees(attendeesData || []);
+          }
+        }
+      } catch (err) {
+        setError('Error fetching event details');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchEvent();
-  }, [id]);
+  }, [id, user]);
+
+  const handleRSVP = async () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    try {
+      if (isRSVPed) {
+        // Remove RSVP
+        const { error } = await supabase
+          .from('event_attendees')
+          .delete()
+          .eq('event_id', event?.id)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        setIsRSVPed(false);
+      } else {
+        // Add RSVP
+        const { error } = await supabase
+          .from('event_attendees')
+          .insert([
+            {
+              event_id: event?.id,
+              user_id: user.id,
+            },
+          ]);
+
+        if (error) throw error;
+        setIsRSVPed(true);
+      }
+    } catch (err) {
+      setError('Error updating RSVP status');
+    }
+  };
 
   if (loading) {
     return (
@@ -100,10 +188,10 @@ export default function EventPage() {
               {event.name}
             </h1>
 
-          <div className="mb-6">
-            <p className="text-lg mb-4">{event.description}</p>
-            <div className="flex flex-col gap-2">
-              <p className="text-[#E4DDC4]">
+            <div className="mb-6">
+              <p className="text-lg mb-4">{event.description}</p>
+              <div className="flex flex-col gap-2">
+                <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Date & Time:</span>{' '}
                   {new Date(event.date).toLocaleString(undefined, {
                     weekday: 'long',
@@ -112,28 +200,64 @@ export default function EventPage() {
                     hour: 'numeric',
                     minute: '2-digit',
                   })}
-              </p>
-              <p className="text-[#E4DDC4]">
-                <span className="font-semibold">Location:</span> {event.location}
-              </p>
-              <p className="text-[#E4DDC4]">
-                <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
-              </p>
+                </p>
+                <p className="text-[#E4DDC4]">
+                  <span className="font-semibold">Location:</span> {event.location}
+                </p>
+                <p className="text-[#E4DDC4]">
+                  <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
+                </p>
+              </div>
             </div>
-          </div>
 
-            <button
-              onClick={() => {
-                const eventUrl = `${window.location.origin}/event/${event.id}`;
-                navigator.clipboard.writeText(eventUrl).then(() => {
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000); // hide after 3s
-                });
-              }}
-              className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
-            >
-              Copy Event Link
-            </button>
+            {/* Attendees Section - Only visible to host */}
+            {isHost && (
+              <div className="mb-6">
+                <h2 className="text-2xl font-mono mb-4">Attendees ({attendees.length})</h2>
+                {attendees.length > 0 ? (
+                  <div className="space-y-2">
+                    {attendees.map((attendee) => (
+                      <div
+                        key={attendee.id}
+                        className="flex items-center justify-between bg-[#1F1F1F] border-2 border-[#E4DDC4] p-3 rounded"
+                      >
+                        <div>
+                          <p className="font-mono">@{attendee.profiles.display_name}</p>
+                          <p className="text-sm text-[#E4DDC4]/70">{attendee.profiles.email}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-lg">No attendees yet.</p>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-4">
+              <button
+                onClick={handleRSVP}
+                className={`border-[4px] text-[18px] font-mono px-4 py-2 uppercase transition duration-300 ${
+                  isRSVPed
+                    ? 'bg-[#E4DDC4] text-[#1F1F1F]'
+                    : 'border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
+                }`}
+              >
+                {isRSVPed ? 'Cancel RSVP' : 'RSVP'}
+              </button>
+              <button
+                onClick={() => {
+                  const eventUrl = `${window.location.origin}/event/${event.id}`;
+                  navigator.clipboard.writeText(eventUrl).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  });
+                }}
+                className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+              >
+                Copy Event Link
+              </button>
+            </div>
           </div>
         </div>
       </div>
