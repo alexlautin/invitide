@@ -1,23 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 import { Metadata } from 'next';
 
-const supabaseServer = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  // Use a more specific query to get all the data we need
-  const { data: event } = await supabaseServer
+  const { data: event } = await supabase
     .from('events')
-    .select('id, name, date, description, image_url, location')
+    .select('name, description, date, image_url')
     .eq('id', params.id)
     .single();
 
   if (!event) {
     return {
       title: 'Event Not Found | Invitide',
-      description: 'Sorry, this event could not be found.',
+      description: 'Sorry, this event does not exist.',
     };
   }
 
@@ -29,17 +31,12 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     minute: '2-digit',
   });
 
-  // Create a more descriptive meta description
-  const metaDescription = event.description 
-    ? `${event.description} - Join us on ${formattedDate} at ${event.location}`
-    : `Join us on ${formattedDate} at ${event.location}`;
-
   return {
     title: `${event.name} | Invitide`,
-    description: metaDescription,
+    description: event.description || `Join us on ${formattedDate}`,
     openGraph: {
       title: event.name,
-      description: metaDescription,
+      description: event.description || `Join us on ${formattedDate}`,
       url: `https://invitide.com/event/${params.id}`,
       images: [
         {
@@ -49,13 +46,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
           alt: event.name,
         },
       ],
-      type: 'website',
-      siteName: 'Invitide',
     },
     twitter: {
       card: 'summary_large_image',
       title: event.name,
-      description: metaDescription,
+      description: event.description || `Join us on ${formattedDate}`,
       images: [event.image_url || 'https://invitide.com/og-event.png'],
     },
   };
