@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
+import QrScanner from 'qr-scanner';
 
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
@@ -41,6 +42,8 @@ export default function EventPage() {
   const [copied, setCopied] = useState(false);
   const [isRSVPed, setIsRSVPed] = useState(false);
   const [attendees, setAttendees] = useState<Attendee[]>([]);
+  const [joinedUsers, setJoinedUsers] = useState<Attendee[]>([]);
+  const [scanning, setScanning] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -77,7 +80,10 @@ export default function EventPage() {
             .single();
 
           setIsRSVPed(!!rsvpData);
-          setIsHost(user.id === data.user_id);
+          if (user?.id && data?.user_id) {
+            setIsHost(user.id === data.user_id);
+            console.log('User is host:', user.id === data.user_id);
+          }
 
           // If user is host, fetch attendees
           if (user.id === data.user_id) {
@@ -102,6 +108,27 @@ export default function EventPage() {
             }));
 
             setAttendees(mappedAttendees);
+
+            // Fetch joined users
+            const { data: joinedData, error: joinedError } = await supabase
+              .from('event_attendees')
+              .select('user_id')
+              .eq('event_id', id);
+
+            const joinedUserIds = joinedData?.map(a => a.user_id) ?? [];
+
+            const { data: joinedProfiles, error: joinedProfilesError } = await supabase
+              .from('profiles')
+              .select('id, display_name')
+              .in('id', joinedUserIds as string[]);
+
+            const joined = (joinedProfiles ?? []).map(profile => ({
+              id: profile.id,
+              user_id: profile.id,
+              display_name: profile.display_name,
+            }));
+
+            setJoinedUsers(joined);
           }
         }
       } catch (_err) {
@@ -152,7 +179,7 @@ export default function EventPage() {
 
   const handleDeleteEvent = async () => {
     if (!user || !event) return;
-    
+
     setIsDeleting(true);
     try {
       // First delete all attendees for this event
@@ -180,6 +207,34 @@ export default function EventPage() {
       setIsDeleting(false);
     }
   };
+
+  useEffect(() => {
+    if (!scanning) return;
+
+    QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
+    const video = document.getElementById('qr-video') as HTMLVideoElement;
+    const scanner = new QrScanner(video, async (result: string) => {
+      const scannedUserId = result;
+      setScanning(false);
+      const { error } = await supabase.from('event_attendees').insert({ event_id: id, user_id: scannedUserId });
+      if (!error) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, display_name')
+          .eq('id', scannedUserId)
+          .single();
+        if (profile) {
+          setJoinedUsers(prev => [...prev, { id: profile.id, user_id: profile.id, display_name: profile.display_name }]);
+        }
+      }
+    });
+
+    scanner.start();
+
+    return () => {
+      scanner.stop();
+    };
+  }, [scanning]);
 
   if (loading || !event) {
     return (
@@ -247,18 +302,44 @@ export default function EventPage() {
               </div>
             )}
 
+            {/* Joined Users Section - Only visible to host */}
+            {isHost && (
+              <div className="mb-6">
+                <h2 className="text-2xl font-mono mb-4">Joined Users ({joinedUsers.length})</h2>
+                {joinedUsers.length > 0 ? (
+                  <div className="space-y-2">
+                    {joinedUsers.map((user) => (
+                      <div key={user.id} className="flex items-center justify-between bg-[#1F1F1F] border-2 border-[#E4DDC4] p-3 rounded">
+                        <p className="font-mono">@{user.display_name}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-lg">No joined users yet.</p>
+                )}
+              </div>
+            )}
+
             <div className="flex flex-col gap-4">
               <div className="flex gap-4">
-                <button
-                  onClick={handleRSVP}
-                  className={`flex-1 border-[4px] text-[18px] font-mono px-4 py-2 uppercase transition duration-300 ${
-                    isRSVPed
-                      ? 'bg-[#E4DDC4] text-[#1F1F1F]'
-                      : 'border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
-                  }`}
-                >
-                  {isRSVPed ? 'Cancel RSVP' : 'RSVP'}
-                </button>
+                {isHost === true ? (
+                  <button
+                    onClick={() => setScanning(true)}
+                    className="flex-1 border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                  >
+                    Scan QR Code
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleRSVP}
+                    className={`flex-1 border-[4px] text-[18px] font-mono px-4 py-2 uppercase transition duration-300 ${isRSVPed
+                        ? 'bg-[#E4DDC4] text-[#1F1F1F]'
+                        : 'border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
+                      }`}
+                  >
+                    {isRSVPed ? 'Cancel RSVP' : 'RSVP'}
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     const eventUrl = `${window.location.origin}/event/${event.id}`;
@@ -308,6 +389,17 @@ export default function EventPage() {
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Scanner Modal */}
+      {scanning && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
+          <div className="bg-[#1F1F1F] p-6 rounded-lg border-4 border-[#E4DDC4]">
+            <h2 className="text-xl font-mono mb-4 text-center">Scan QR Code</h2>
+            <video id="qr-video" className="w-full max-w-sm border border-[#E4DDC4] rounded"></video>
+            <button onClick={() => setScanning(false)} className="mt-4 w-full border-[4px] text-[18px] font-mono border-red-500 text-red-500 px-4 py-2 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition duration-300">Cancel</button>
           </div>
         </div>
       )}
