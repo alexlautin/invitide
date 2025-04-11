@@ -57,6 +57,7 @@ export default function EventPage() {
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [isHost, setIsHost] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [cameFromProfile, setCameFromProfile] = useState(false);
 
   useEffect(() => {
@@ -278,42 +279,71 @@ export default function EventPage() {
               </div>
             )}
 
-            <div className="flex gap-4">
-              <button
-                onClick={handleRSVP}
-                className={`border-[4px] text-[18px] font-mono px-4 py-2 uppercase transition duration-300 ${
-                  isRSVPed
-                    ? 'bg-[#E4DDC4] text-[#1F1F1F]'
-                    : 'border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
-                }`}
-              >
-                {isRSVPed ? 'Cancel RSVP' : 'RSVP'}
-              </button>
-              <button
-                onClick={() => {
-                  const eventUrl = `${window.location.origin}/event/${event.id}`;
-                  navigator.clipboard.writeText(eventUrl).then(() => {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                  });
-                }}
-                className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
-              >
-                Copy Event Link
-              </button>
-              {isHost && (
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-4">
                 <button
-                  onClick={handleDeleteEvent}
-                  disabled={isDeleting}
-                  className="border-[4px] text-[18px] font-mono border-red-500 text-red-500 px-4 py-2 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition duration-300"
+                  onClick={handleRSVP}
+                  className={`flex-1 border-[4px] text-[18px] font-mono px-4 py-2 uppercase transition duration-300 ${
+                    isRSVPed
+                      ? 'bg-[#E4DDC4] text-[#1F1F1F]'
+                      : 'border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
+                  }`}
                 >
-                  {isDeleting ? 'Deleting...' : 'Delete Event'}
+                  {isRSVPed ? 'Cancel RSVP' : 'RSVP'}
                 </button>
+                <button
+                  onClick={() => {
+                    const eventUrl = `${window.location.origin}/event/${event.id}`;
+                    navigator.clipboard.writeText(eventUrl).then(() => {
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    });
+                  }}
+                  className="flex-1 border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                >
+                  Copy Event Link
+                </button>
+              </div>
+              {isHost && (
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="border-[4px] text-[18px] font-mono border-red-500 text-red-500 px-4 py-2 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition duration-300"
+                  >
+                    Delete Event
+                  </button>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[#1F1F1F] border-[5px] border-[#E4DDC4] rounded-lg p-8 shadow-[4px_4px_0px_#000] max-w-md w-full mx-4">
+            <h2 className="text-2xl font-mono mb-4">Delete Event</h2>
+            <p className="mb-6">Are you sure you want to delete this event? This action cannot be undone.</p>
+            <div className="flex gap-4 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteEvent}
+                disabled={isDeleting}
+                className="border-[4px] text-[18px] font-mono border-red-500 text-red-500 px-4 py-2 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition duration-300"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {copied && (
         <div className="fixed bottom-4 left-1/2 w-[90%] sm:w-auto max-w-xs sm:max-w-sm transform -translate-x-1/2 bg-[#1F1F1F] border-[4px] border-[#E4DDC4] text-[#E4DDC4] px-4 py-2 rounded-lg shadow-[4px_4px_0px_#000] text-base sm:text-xl font-mono animate-slide-in-out z-50 text-center">
           Event link copied to clipboard!

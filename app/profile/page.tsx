@@ -166,20 +166,6 @@ export default function ProfilePage() {
                 </span>
                 <span>{event.location}</span>
               </div>
-              {activeTab === 'created' && (
-                <div className="mt-4 flex justify-end">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteEvent(event.id);
-                    }}
-                    disabled={deletingEventId === event.id}
-                    className="border-[2px] border-red-500 text-red-500 px-3 py-1 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition text-sm font-mono"
-                  >
-                    {deletingEventId === event.id ? 'Deleting...' : 'Delete Event'}
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         ))}
