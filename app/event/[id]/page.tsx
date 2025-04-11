@@ -215,15 +215,16 @@ export default function EventPage() {
   useEffect(() => {
     if (!scanning) return;
 
-    QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
+    let scanner: any = null;
     const video = document.getElementById('qr-video') as HTMLVideoElement;
-    let scanner: QrScanner | null = null;
 
-    const startScanner = async () => {
-      setScanStatus('Scanning in progress...');
-      scanner = new QrScanner(
-        video,
-        async (result: string) => {
+    (async () => {
+      try {
+        const QrScannerModule = await import('qr-scanner');
+        const QrScanner = QrScannerModule.default; // or destructure if needed
+
+        setScanStatus('Scanning in progress...');
+        scanner = new QrScanner(video, async (result: string) => {
           console.log('Scanned result:', result);
           setScanStatus('Processing scanned data...');
           const scannedUserId = result;
@@ -236,8 +237,8 @@ export default function EventPage() {
             );
 
           if (error) {
-            console.error('🔥 Supabase upsert failed:', error);
-            setScanStatus('Error adding attendee.');
+            // console.error('🔥 Supabase upsert failed:', error);
+            // setScanStatus('Error adding attendee.');
           } else {
             console.log('✅ Supabase upsert result:', data);
 
@@ -262,18 +263,19 @@ export default function EventPage() {
               setScanStatus('Scan successful!');
             }
           }
-          
+
           setTimeout(() => {
             setScanning(false);
           }, 1000);
-        }
-      );
+        });
 
-      setScanStatus('Scan a QR code');
-      await scanner.start();
-    };
-
-    startScanner();
+        setScanStatus('Scan a QR code');
+        await scanner.start();
+      } catch (e) {
+        console.error('Error importing or starting QrScanner:', e);
+        setScanStatus('Scanner failed to start.');
+      }
+    })();
 
     return () => {
       if (scanner) {

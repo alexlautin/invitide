@@ -156,12 +156,15 @@ export default function ProfilePage() {
             </p>
             {user && (
               <div className="flex justify-center">
-                <div className="w-40 sm:w-64 border-[2px] border-[#E4DDC4] p-4 sm:p-8 rounded-lg">
-                  <QRCodeCanvas 
-                    value={JSON.stringify({ userId: user.id }).slice(11).slice(0, -2)} 
-                    size={256}
-                    style={{ width: '100%', height: 'auto' }}
-                  />
+                <div className="w-40 sm:w-64 p-4 sm:p-8 rounded-lg">
+                  <div className="border-[4px] border-[#E4DDC4] animate-pulse shadow-[0_0_12px_#E4DDC4] rounded-lg">
+                    <QRCodeCanvas 
+                      value={JSON.stringify({ userId: user.id })} 
+                      size={512} // Increase size for better scanning reliability
+                      level="H" // Set error correction level to High
+                      style={{ width: '100%', height: 'auto' }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
