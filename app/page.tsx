@@ -134,10 +134,10 @@ export default function HomePage() {
               Create Event
             </button>
             <Link
-              href="/find-events"
+              href="/my-events"
               className="border-[4px] text-xl sm:text-2xl border-[#E4DDC4] px-6 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition text-center"
             >
-              Find Events
+              My Events
             </Link>
           </div>
         </div>
