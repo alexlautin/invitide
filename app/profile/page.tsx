@@ -6,6 +6,8 @@ import { VT323 } from 'next/font/google';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import {QRCodeCanvas} from 'qrcode.react';
+import Link from 'next/link';
+import Image from 'next/image';
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -19,18 +21,25 @@ const vt323 = VT323({
   weight: ['400'],
 });
 
-interface Profile {
+interface Event {
   id: string;
-  display_name: string;
+  name: string;
+  date: string;
+  location: string;
+  description: string;
+  image_url: string;
 }
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [createdEvents, setCreatedEvents] = useState<Event[]>([]);
+  const [attendedEvents, setAttendedEvents] = useState<Event[]>([]);
+  const [activeTab, setActiveTab] = useState<'created' | 'attended'>('created');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -49,6 +58,24 @@ export default function ProfilePage() {
 
       setProfile(profileData);
       setDisplayName(profileData?.display_name || '');
+      
+      // Fetch created events
+      const { data: createdEventsData } = await supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('date', { ascending: false });
+
+      setCreatedEvents(createdEventsData || []);
+
+      // Fetch attended events (you'll need to implement this based on your event attendance system)
+      const { data: attendedEventsData } = await supabase
+        .from('event_attendees')
+        .select('events(*)')
+        .eq('user_id', session.user.id);
+
+      setAttendedEvents(attendedEventsData?.map((ea: any) => ea.events) || []);
+      
       setLoading(false);
     };
 
@@ -56,7 +83,7 @@ export default function ProfilePage() {
   }, [router]);
 
   const handleUpdateProfile = async () => {
-    if (!user || !profile) return;
+    if (!user) return;
 
     const { error } = await supabase
       .from('profiles')
@@ -66,12 +93,52 @@ export default function ProfilePage() {
     if (error) {
       console.error('Error updating profile:', error.message);
     } else {
-      setProfile({
-        id: profile.id,
-        display_name: displayName,
-      });
+      setProfile({ ...profile, display_name: displayName });
       setIsEditing(false);
     }
+  };
+
+  const renderEvents = (events: Event[]) => {
+    if (events.length === 0) {
+      return <p className="text-lg">No {activeTab} events yet.</p>;
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {events.map((event) => (
+          <div
+            key={event.id}
+            onClick={() => router.push(`/event/${event.id}`)}
+            className="cursor-pointer bg-[#1F1F1F] border-[4px] border-[#E4DDC4] rounded-lg overflow-hidden hover:transform hover:scale-105 transition-transform duration-300 shadow-[4px_4px_0px_#000]"
+          >
+            {event.image_url && (
+              <Image
+                src={event.image_url}
+                alt={event.name}
+                width={500}
+                height={200}
+                className="w-full h-48 object-cover"
+              />
+            )}
+            <div className="p-6">
+              <h3 className="text-xl font-mono mb-2 uppercase" style={{ fontFamily: 'var(--font-vt323)' }}>
+                {event.name}
+              </h3>
+              <p className="text-[#E4DDC4] mb-4 font-mono">{event.description}</p>
+              <div className="flex justify-between text-sm text-[#E4DDC4] font-mono">
+                <span>
+                  {new Date(event.date).toLocaleString(undefined, {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
+                </span>
+                <span>{event.location}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -84,19 +151,18 @@ export default function ProfilePage() {
 
   return (
     <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-8`}>
-      {/* Back Button */}
-      <button
-        onClick={() => router.back()}
-        className="text-[#E4DDC4] mb-6 hover:underline text-lg w-fit"
-      >
-        ← Back
-      </button>
+      <div className="absolute top-4 left-4">
+        <Link href="/" className="text-[#E4DDC4] hover:underline text-2xl font-mono uppercase">
+          ← Back to Home
+        </Link>
+      </div>
 
-      <h1 className="text-4xl font-mono font-normal p-2 uppercase mb-8">
+      <h1 className="w-full text-right text-4xl font-mono font-normal p-2 uppercase mb-8">
         Profile
       </h1>
 
-      <div className="max-w-2xl mx-auto w-full">
+      <div className="max-w-4xl mx-auto w-full space-y-8">
+        {/* Profile Information */}
         <div className="bg-[#1F1F1F] border-[4px] border-[#E4DDC4] p-8 rounded-lg">
           <div className="mb-6">
             <h2 className="text-2xl font-mono mb-4">Account Information</h2>
@@ -154,6 +220,62 @@ export default function ProfilePage() {
               <QRCodeCanvas value={JSON.stringify({ userId: user.id }).slice(11).slice(0,-2)} size={256} />
             )}
           </div>
+        </div>
+
+        {/* Events Section */}
+        <div className="bg-[#1F1F1F] border-[4px] border-[#E4DDC4] p-8 rounded-lg">
+          <div className="flex gap-4 mb-6">
+            <button
+              onClick={() => setActiveTab('created')}
+              className={`text-xl font-mono px-6 py-2 uppercase transition duration-300 ${
+                activeTab === 'created'
+                  ? 'bg-[#E4DDC4] text-[#1F1F1F]'
+                  : 'border-[4px] border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
+              }`}
+            >
+              Created Events
+            </button>
+            <button
+              onClick={() => setActiveTab('attended')}
+              className={`text-xl font-mono px-6 py-2 uppercase transition duration-300 ${
+                activeTab === 'attended'
+                  ? 'bg-[#E4DDC4] text-[#1F1F1F]'
+                  : 'border-[4px] border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
+              }`}
+            >
+              Attended Events
+            </button>
+          </div>
+
+          {activeTab === 'created' ? renderEvents(createdEvents) : renderEvents(attendedEvents)}
+        </div>
+
+        {/* Events Section */}
+        <div className="bg-[#1F1F1F] border-[4px] border-[#E4DDC4] p-8 rounded-lg">
+          <div className="flex gap-4 mb-6">
+            <button
+              onClick={() => setActiveTab('created')}
+              className={`text-xl font-mono px-6 py-2 uppercase transition duration-300 ${
+                activeTab === 'created'
+                  ? 'bg-[#E4DDC4] text-[#1F1F1F]'
+                  : 'border-[4px] border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
+              }`}
+            >
+              Created Events
+            </button>
+            <button
+              onClick={() => setActiveTab('attended')}
+              className={`text-xl font-mono px-6 py-2 uppercase transition duration-300 ${
+                activeTab === 'attended'
+                  ? 'bg-[#E4DDC4] text-[#1F1F1F]'
+                  : 'border-[4px] border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
+              }`}
+            >
+              Attended Events
+            </button>
+          </div>
+
+          {activeTab === 'created' ? renderEvents(createdEvents) : renderEvents(attendedEvents)}
         </div>
       </div>
     </main>
