@@ -97,22 +97,36 @@ export default function CreateEventPage() {
                         </div>
                         <div>
                             <label className="block mb-1 text-md uppercase">Date</label>
-                            <input
-                                type="date"
-                                required
-                                value={eventDate}
-                                onChange={(e) => setEventDate(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 bg-[#1F1F1F] text-[#E4DDC4] rounded-md focus:outline-none focus:ring-2 focus:ring-[#E4DDC4]"
-                            />
+                            <div className="relative">
+                                <input
+                                    type="date"
+                                    required
+                                    value={eventDate}
+                                    onChange={(e) => setEventDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 bg-[#1F1F1F] text-[#E4DDC4] rounded-md focus:outline-none focus:ring-2 focus:ring-[#E4DDC4] appearance-none"
+                                />
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#E4DDC4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label className="block mb-1 text-md uppercase">Time (Optional)</label>
-                            <input
-                                type="time"
-                                value={eventTime}
-                                onChange={(e) => setEventTime(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 bg-[#1F1F1F] text-[#E4DDC4] rounded-md focus:outline-none focus:ring-2 focus:ring-[#E4DDC4]"
-                            />
+                            <div className="relative">
+                                <input
+                                    type="time"
+                                    value={eventTime}
+                                    onChange={(e) => setEventTime(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 bg-[#1F1F1F] text-[#E4DDC4] rounded-md focus:outline-none focus:ring-2 focus:ring-[#E4DDC4] appearance-none"
+                                />
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#E4DDC4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label className="block mb-1 text-md uppercase">Location</label>
