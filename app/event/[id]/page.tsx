@@ -231,8 +231,8 @@ export default function EventPage() {
           const { data, error } = await supabase
             .from('event_attendees')
             .upsert(
-              { event_id: id, user_id: scannedUserId },
-              { onConflict: ['event_id', 'user_id'] }
+              [{ event_id: id, user_id: scannedUserId }],
+              { onConflict: 'event_id, user_id' }
             );
 
           if (error) {
