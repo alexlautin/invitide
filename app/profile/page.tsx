@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [createdEvents, setCreatedEvents] = useState<Event[]>([]);
   const [attendedEvents, setAttendedEvents] = useState<Event[]>([]);
   const [activeTab, setActiveTab] = useState<'created' | 'attended'>('created');
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -98,6 +99,37 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!user) return;
+    
+    setDeletingEventId(eventId);
+    try {
+      // First delete all attendees for this event
+      const { error: attendeesError } = await supabase
+        .from('event_attendees')
+        .delete()
+        .eq('event_id', eventId);
+
+      if (attendeesError) throw attendeesError;
+
+      // Then delete the event
+      const { error: eventError } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId)
+        .eq('user_id', user.id);
+
+      if (eventError) throw eventError;
+
+      // Update the local state
+      setCreatedEvents(createdEvents.filter(event => event.id !== eventId));
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
+
   const renderEvents = (events: Event[]) => {
     if (events.length === 0) {
       return <p className="text-lg">No {activeTab} events yet.</p>;
@@ -134,6 +166,20 @@ export default function ProfilePage() {
                 </span>
                 <span>{event.location}</span>
               </div>
+              {activeTab === 'created' && (
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteEvent(event.id);
+                    }}
+                    disabled={deletingEventId === event.id}
+                    className="border-[2px] border-red-500 text-red-500 px-3 py-1 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition text-sm font-mono"
+                  >
+                    {deletingEventId === event.id ? 'Deleting...' : 'Delete Event'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}
