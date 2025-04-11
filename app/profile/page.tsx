@@ -5,6 +5,7 @@ import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
+import {QRCodeCanvas} from 'qrcode.react';
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -34,12 +35,10 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
-
       if (error || !session) {
         router.push('/login');
         return;
       }
-
       setUser(session.user);
 
       const { data: profileData } = await supabase
@@ -142,6 +141,17 @@ export default function ProfilePage() {
                   Edit Profile
                 </button>
               </div>
+            )}
+          </div>
+
+          {/* User-Specific Attendance QR Code Section */}
+          <div className="mt-8 bg-[#262626] border-[4px] border-[#E4DDC4] p-8 rounded-lg">
+            <h2 className="text-2xl font-mono mb-4">Your Attendance QR Code</h2>
+            <p className="mb-4 text-sm">
+              This QR code is unique to your account. Event creators can scan it to mark your attendance at events.
+            </p>
+            {user && (
+              <QRCodeCanvas value={JSON.stringify({ userId: user.id })} size={256} />
             )}
           </div>
         </div>
