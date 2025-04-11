@@ -139,7 +139,7 @@ export default function HomePage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col lg:flex-row gap-8 sm:gap-12 items-center justify-between flex-1">
+      <div className="flex flex-col lg:flex-row gap-8 sm:gap-12 items-center justify-center flex-1 max-w-7xl mx-auto">
         {/* Left Side */}
         <div className="flex flex-col text-center lg:text-left max-w-2xl">
           <p

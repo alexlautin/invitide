@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [createdEvents, setCreatedEvents] = useState<Event[]>([]);
   const [attendedEvents, setAttendedEvents] = useState<Event[]>([]);
   const [activeTab, setActiveTab] = useState<'created' | 'attended'>('created');
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -95,6 +96,37 @@ export default function ProfilePage() {
     } else {
       setProfile({ ...profile, display_name: displayName });
       setIsEditing(false);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!user) return;
+    
+    setDeletingEventId(eventId);
+    try {
+      // First delete all attendees for this event
+      const { error: attendeesError } = await supabase
+        .from('event_attendees')
+        .delete()
+        .eq('event_id', eventId);
+
+      if (attendeesError) throw attendeesError;
+
+      // Then delete the event
+      const { error: eventError } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId)
+        .eq('user_id', user.id);
+
+      if (eventError) throw eventError;
+
+      // Update the local state
+      setCreatedEvents(createdEvents.filter(event => event.id !== eventId));
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    } finally {
+      setDeletingEventId(null);
     }
   };
 
