@@ -5,7 +5,7 @@ import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
-import {QRCodeCanvas} from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -40,6 +40,16 @@ export default function ProfilePage() {
   const [createdEvents, setCreatedEvents] = useState<Event[]>([]);
   const [attendedEvents, setAttendedEvents] = useState<Event[]>([]);
   const [activeTab, setActiveTab] = useState<'created' | 'attended'>('created');
+  // New state variable for the event name to be used in the check-in URL.
+  const [selectedEventName, setSelectedEventName] = useState('');
+
+  // Compute the checkin URL only if both a user and an event name have been set.
+  const checkinUrl =
+    user && selectedEventName
+      ? `${window.location.origin}/host/checkin?guestId=${user.id}&eventName=${encodeURIComponent(
+          selectedEventName
+        )}`
+      : '';
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -212,17 +222,32 @@ export default function ProfilePage() {
 
           {/* User-Specific Attendance QR Code Section */}
           <div className="mt-8 bg-[#262626] border-[4px] border-[#E4DDC4] p-8 rounded-lg">
-            <h2 className="text-2xl font-mono mb-4">Your Attendance QR Code</h2>
-            <p className="mb-4 text-sm">
-              This QR code is unique to your account. Event creators can scan it to mark your attendance at events.
+            <h2 className="text-2xl font-mono mb-4 text-center">Your Attendance QR Code</h2>
+            <p className="mb-4 text-sm text-center">
+              Enter the event name (for check-in) below. When an event host scans your QR code,
+              they will mark your attendance for that event.
             </p>
-            {user && (
-             <div className="flex justify-center">
-             <QRCodeCanvas 
-               value={JSON.stringify({ userId: user.id }).slice(11).slice(0, -2)} 
-               size={256} 
-             />
-           </div>
+            {/* Event name input */}
+            <div className="mb-4">
+              <label htmlFor="eventName" className="block text-sm mb-1">
+                Event Name for Check-In:
+              </label>
+              <input
+                id="eventName"
+                type="text"
+                value={selectedEventName}
+                onChange={(e) => setSelectedEventName(e.target.value)}
+                placeholder="Enter event name"
+                className="w-full bg-[#1F1F1F] border-2 border-[#E4DDC4] p-2 text-[#E4DDC4]"
+              />
+            </div>
+            {user && selectedEventName && (
+              <div className="flex justify-center">
+                <QRCodeCanvas 
+                  value={checkinUrl} 
+                  size={256} 
+                />
+              </div>
             )}
           </div>
         </div>
