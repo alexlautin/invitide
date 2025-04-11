@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 import { useRouter } from 'next/navigation';
+import { User } from '@supabase/supabase-js';
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -17,10 +18,15 @@ const vt323 = VT323({
   weight: ['400'],
 });
 
+interface Profile {
+  id: string;
+  display_name: string;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -51,7 +57,7 @@ export default function ProfilePage() {
   }, [router]);
 
   const handleUpdateProfile = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
 
     const { error } = await supabase
       .from('profiles')
@@ -61,7 +67,10 @@ export default function ProfilePage() {
     if (error) {
       console.error('Error updating profile:', error.message);
     } else {
-      setProfile({ ...profile, display_name: displayName });
+      setProfile({
+        id: profile.id,
+        display_name: displayName,
+      });
       setIsEditing(false);
     }
   };
@@ -76,6 +85,14 @@ export default function ProfilePage() {
 
   return (
     <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-8`}>
+      {/* Back Button */}
+      <button
+        onClick={() => router.back()}
+        className="text-[#E4DDC4] mb-6 hover:underline text-lg w-fit"
+      >
+        ← Back
+      </button>
+
       <h1 className="text-4xl font-mono font-normal p-2 uppercase mb-8">
         Profile
       </h1>
@@ -131,4 +148,4 @@ export default function ProfilePage() {
       </div>
     </main>
   );
-} 
+}
