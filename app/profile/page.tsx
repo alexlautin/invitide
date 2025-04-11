@@ -217,37 +217,14 @@ export default function ProfilePage() {
               This QR code is unique to your account. Event creators can scan it to mark your attendance at events.
             </p>
             {user && (
-              <QRCodeCanvas value={JSON.stringify({ userId: user.id }).slice(11).slice(0,-2)} size={256} />
+             <div className="flex justify-center">
+             <QRCodeCanvas 
+               value={JSON.stringify({ userId: user.id }).slice(11).slice(0, -2)} 
+               size={256} 
+             />
+           </div>
             )}
           </div>
-        </div>
-
-        {/* Events Section */}
-        <div className="bg-[#1F1F1F] border-[4px] border-[#E4DDC4] p-8 rounded-lg">
-          <div className="flex gap-4 mb-6">
-            <button
-              onClick={() => setActiveTab('created')}
-              className={`text-xl font-mono px-6 py-2 uppercase transition duration-300 ${
-                activeTab === 'created'
-                  ? 'bg-[#E4DDC4] text-[#1F1F1F]'
-                  : 'border-[4px] border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
-              }`}
-            >
-              Created Events
-            </button>
-            <button
-              onClick={() => setActiveTab('attended')}
-              className={`text-xl font-mono px-6 py-2 uppercase transition duration-300 ${
-                activeTab === 'attended'
-                  ? 'bg-[#E4DDC4] text-[#1F1F1F]'
-                  : 'border-[4px] border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
-              }`}
-            >
-              Attended Events
-            </button>
-          </div>
-
-          {activeTab === 'created' ? renderEvents(createdEvents) : renderEvents(attendedEvents)}
         </div>
 
         {/* Events Section */}
