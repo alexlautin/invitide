@@ -218,64 +218,93 @@ export default function EventPage() {
     let scanner: QrScanner | null = null;
     const video = document.getElementById('qr-video') as HTMLVideoElement;
 
-    (async () => {
-      try {
-        const QrScannerModule = await import('qr-scanner');
-        const QrScanner = QrScannerModule.default; // or destructure if needed
-
-        setScanStatus('Scanning in progress...');
-        scanner = new QrScanner(video, async (result: string) => {
-          console.log('Scanned result:', result);
+    const startScanner = async () => {
+      setScanStatus('Initializing scanner...');
+      
+      // Simple QR scanner without custom overlay
+      let hasScanned = false;
+      
+      scanner = new QrScanner(
+        video,
+        result => {
+          if (hasScanned) return;
+          hasScanned = true;
+          console.log('Scanned result:', result.data);
           setScanStatus('Processing scanned data...');
-          const scannedUserId = result;
+          const scannedUserId = result.data;
+          
+          // Process the result
+          handleScannedCode(scannedUserId);
+        },
+        {
+          highlightScanRegion: true,
+          highlightCodeOutline: true, // Use built-in highlighting instead
+        }
+      );
+      
+      await scanner.start();
+      setScanStatus('Scanner is active. Please align the QR code.');
+    };
 
-          const { data, error } = await supabase
-            .from('event_attendees')
-            .upsert(
-              [{ event_id: id, user_id: scannedUserId }],
-              { onConflict: 'event_id, user_id' }
-            );
+    // Function to handle the scanned code data
+    const handleScannedCode = async (scannedUserId: string) => {
+      try {
+        // Try to parse JSON if the string looks like JSON
+        let userId = scannedUserId;
+        if (scannedUserId.includes('{') && scannedUserId.includes('}')) {
+          try {
+            const jsonData = JSON.parse(scannedUserId);
+            userId = jsonData.userId || scannedUserId;
+          } catch (e) {
+            console.error('Failed to parse QR JSON:', e);
+            // Continue with the original string if parsing fails
+          }
+        }
 
-          if (error) {
-            // console.error('🔥 Supabase upsert failed:', error);
-            // setScanStatus('Error adding attendee.');
-          } else {
-            console.log('✅ Supabase upsert result:', data);
+        console.log('Processing user ID:', userId);
+        
+        const { error } = await supabase
+          .from('event_attendees')
+          .upsert({ event_id: id, user_id: userId }, { onConflict: 'event_id,user_id' });
 
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('id, display_name')
-              .eq('id', scannedUserId)
-              .single();
+        if (!error) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, display_name')
+            .eq('id', userId)
+            .single();
 
-            if (profileError) {
-              console.error('⚠️ Failed to fetch profile:', profileError);
-              setScanStatus('User profile not found.');
-            } else if (profile) {
-              setJoinedUsers(prev => [
+          if (profile) {
+            setJoinedUsers(prev => {
+              // Check if user already exists in the array to prevent duplicates
+              if (prev.some(user => user.id === profile.id)) {
+                return prev;
+              }
+              return [
                 ...prev,
                 {
                   id: profile.id,
                   user_id: profile.id,
                   display_name: profile.display_name,
                 },
-              ]);
-              setScanStatus('Scan successful!');
-            }
+              ];
+            });
+            setScanStatus('Scan successful!');
+            setTimeout(() => setScanning(false), 1500);
+          } else {
+            setScanStatus('User profile not found.');
           }
-
-          setTimeout(() => {
-            setScanning(false);
-          }, 1000);
-        });
-
-        setScanStatus('Scan a QR code');
-        await scanner.start();
-      } catch (e) {
-        console.error('Error importing or starting QrScanner:', e);
-        setScanStatus('Scanner failed to start.');
+        } else {
+          console.error('Error adding attendee:', error);
+          setScanStatus(`Error: ${error.message}`);
+        }
+      } catch (error) {
+        console.error('Error processing QR code:', error);
+        setScanStatus('Error processing QR code.');
       }
-    })();
+    };
+
+    startScanner();
 
     return () => {
       if (scanner) {
@@ -499,14 +528,20 @@ export default function EventPage() {
       {/* QR Scanner Modal */}
       {scanning && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
-          <div className="bg-[#1F1F1F] p-6 rounded-lg border-4 border-[#E4DDC4]">
+          <div className="bg-[#1F1F1F] p-6 rounded-lg border-4 border-[#E4DDC4] w-full max-w-sm mx-auto">
             <h2 className="text-xl font-mono mb-4 text-center">Scan QR Code</h2>
             {scanStatus && (
               <div className="text-center mb-2 font-mono text-lg text-[#E4DDC4]">
-                {scanStatus}
+                {/* {scanStatus} */}
               </div>
             )}
-            <video id="qr-video" className="w-full max-w-sm border border-[#E4DDC4] rounded"></video>
+            <div className="relative">
+              <video id="qr-video" className="w-full max-w-sm border border-[#E4DDC4] rounded"></video>
+              {/* QR code scanning guide overlay */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-3/4 h-3/4 border-4 border-[#E4DDC4] rounded-xl opacity-50 animate-pulse"></div>
+              </div>
+            </div>
             <p className="mt-4 text-center text-[#E4DDC4]">{scanStatus}</p>
             <button onClick={() => setScanning(false)} className="mt-4 w-full border-[4px] text-[18px] font-mono border-red-500 text-red-500 px-4 py-2 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition duration-300">Cancel</button>
           </div>
