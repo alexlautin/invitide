@@ -7,9 +7,10 @@ const supabaseServer = createClient(
 );
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  // Use a more specific query to get all the data we need
   const { data: event } = await supabaseServer
     .from('events')
-    .select('name, date, description, image_url')
+    .select('id, name, date, description, image_url, location')
     .eq('id', params.id)
     .single();
 
@@ -28,12 +29,17 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     minute: '2-digit',
   });
 
+  // Create a more descriptive meta description
+  const metaDescription = event.description 
+    ? `${event.description} - Join us on ${formattedDate} at ${event.location}`
+    : `Join us on ${formattedDate} at ${event.location}`;
+
   return {
     title: `${event.name} | Invitide`,
-    description: event.description || `Join us on ${formattedDate}`,
+    description: metaDescription,
     openGraph: {
       title: event.name,
-      description: event.description || `Join us on ${formattedDate}`,
+      description: metaDescription,
       url: `https://invitide.com/event/${params.id}`,
       images: [
         {
@@ -43,11 +49,13 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
           alt: event.name,
         },
       ],
+      type: 'website',
+      siteName: 'Invitide',
     },
     twitter: {
       card: 'summary_large_image',
       title: event.name,
-      description: event.description || `Join us on ${formattedDate}`,
+      description: metaDescription,
       images: [event.image_url || 'https://invitide.com/og-event.png'],
     },
   };
