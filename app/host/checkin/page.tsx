@@ -32,16 +32,33 @@ export default function HostCheckin() {
         return;
       }
 
-      // Update the RSVP record using eventName for matching
-      const { data, error } = await supabase
-        .from('rsvps')
-        .update({ signed_in: true })
-        .match({ user_id: guestId, event_name: eventName });
+      console.log('Supabase client initialized:', supabase);
 
-      if (error || !data) {
-        setError('Failed to check in guest. Please try again.');
-      } else {
-        setMessage('Guest has been successfully checked in!');
+      // Update the RSVP record using eventName for matching
+      try {
+        const { data, error } = await supabase
+          .from('rsvps')
+          .select('*')
+          .eq('user_id', guestId)
+          .eq('event_name', eventName);
+
+        console.log('Supabase response:', { data, error });
+
+        if (error) {
+          setError('An error occurred during check-in. Please try again.');
+        } else if (!data || data.length === 0) {
+          setError('No RSVP found for this guest and event. Please check the event name.');
+        } else {
+          setMessage('Guest record found (select query succeeded).');
+        }
+      } catch (err) {
+        console.error('Hard error during Supabase select:', {
+          name: err?.name,
+          message: err?.message,
+          stack: err?.stack,
+          raw: err,
+        });
+        setError('Unexpected failure. Could not contact database.');
       }
       setLoading(false);
     }
