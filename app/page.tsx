@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -8,7 +9,6 @@ import { supabase } from '@/lib/supabaseClient';
 import './customCursor.css';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
-
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -25,7 +25,8 @@ const vt323 = VT323({
 export default function HomePage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDisplayName = async () => {
@@ -39,6 +40,7 @@ export default function HomePage() {
         setLoading(false);
         return;
       }
+
       const user = session?.user ?? null;
       setUser(user);
 
@@ -63,94 +65,94 @@ export default function HomePage() {
     setDisplayName(null);
     setUser(null);
   };
-  
+
   return (
-    <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-2`}>
-      <div className="absolute top-4 right-4 flex items-center gap-4">
+    <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-4`}>
+      {/* Auth Links */}
+      <div className="absolute top-4 right-4 flex flex-wrap gap-4 text-sm sm:text-base">
         {!loading && user ? (
           <>
-            <span className="text-[18px] font-mono text-[#E4DDC4]">
-              Welcome, {displayName ?? user.email}
-            </span>
+            <span>Welcome, {displayName ?? user.email}</span>
             <button
               onClick={handleSignOut}
-              className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+              className="border-[2px] sm:border-[4px] border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition"
             >
               Sign Out
             </button>
           </>
         ) : (
           <>
-            <Link href="/login" className="border-[4px] text-[25px] font-mono font-normal border-[#E4DDC4] px-4 py-0 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+            <Link
+              href="/login"
+              className="border-[2px] sm:border-[4px] border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition"
+            >
               Login
             </Link>
-            <Link href="/signup" className="border-[4px] text-[25px] font-mono font-normal border-[#E4DDC4] px-4 py-0 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+            <Link
+              href="/signup"
+              className="border-[2px] sm:border-[4px] border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition"
+            >
               Sign Up
             </Link>
           </>
         )}
       </div>
-      <h1 className="text-4xl font-mono font-normal p-2 uppercase mb-8">
-        Invitide
-      </h1>
-      <div className="flex flex-1">
-        <div className="flex flex-row justify-between items-start">
-          <div className="flex flex-col">
-            <p
-              className="text-[104px] uppercase p-2 pt-30 mb-2 ml-30 leading-none"
-              style={{ fontFamily: 'var(--font-vt323)' }}
+
+      {/* Title */}
+      <h1 className="text-3xl sm:text-4xl uppercase font-mono mb-6">Invitide</h1>
+
+      {/* Main Content */}
+      <div className="flex flex-col lg:flex-row gap-12 items-center justify-between flex-1">
+        {/* Left Side */}
+        <div className="flex flex-col text-center lg:text-left max-w-2xl">
+          <p
+            className="text-4xl sm:text-6xl md:text-7xl lg:text-[104px] uppercase mb-4 leading-tight"
+            style={{ fontFamily: 'var(--font-vt323)' }}
+          >
+            Ride the Wave <br />
+            of Connection.
+          </p>
+          <p
+            className="text-xl sm:text-2xl md:text-3xl uppercase mb-6"
+            style={{ fontFamily: 'var(--font-vt323)' }}
+          >
+            Create or join an event in seconds.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <button
+              onClick={() => {
+                if (!user) {
+                  router.push('/login');
+                } else {
+                  router.push('/create-event');
+                }
+              }}
+              className="border-[4px] text-xl sm:text-2xl border-[#E4DDC4] px-6 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition"
             >
-              Ride the Wave <br />
-              of Connection.
-            </p>
-            <p
-              className="text-[42px] uppercase p-2 mb-4 ml-30 leading-none"
-              style={{ fontFamily: 'var(--font-vt323)' }}
+              Create Event
+            </button>
+            <Link
+              href="/find-events"
+              className="border-[4px] text-xl sm:text-2xl border-[#E4DDC4] px-6 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition text-center"
             >
-              Create or join an event in seconds.
-            </p>
-            <div className="flex gap-4 ml-32">
-              <button
-                onClick={() => {
-                  if (!user) {
-                    router.push('/login');
-                  } else {
-                    router.push('/create-event');
-                  }
-                }}
-                className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
-              >
-                Create Event
-              </button>
-              <Link
-                href="/find-events"
-                className="border-[4px] text-[30px] font-mono font-normal border-[#E4DDC4] px-8 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
-              >
-                Find Events
-              </Link>
-            </div>
+              Find Events
+            </Link>
           </div>
-          <div className="flex flex-col items-center mr-10 ml-50 mt-30">
-            <div className="group flex flex-col items-center">
-              <div
-                className="relative bg-[#1F1F1F] ml-10 border-[5px] border-[#E4DDC4] text-[#E4DDC4] px-4 py-3 text-4xl rounded-lg shadow-[4px_4px_0px_#000]"
-                style={{ fontFamily: 'var(--font-vt323)' }}
-              >
-                <span className="block leading-tight">
-                  LET&apos;S PLAN YOUR EVENT!
-                </span>
-                <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
-                <div className="absolute bottom-[-11px] left-[calc(50%-11px)] w-0 h-0 border-l-[11px] border-r-[11px] border-t-[11px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
-              </div>
-              <Image
-                src="/logo.png"
-                alt="logo"
-                width={300}
-                height={300}
-                className="mb-2 group-hover:animate-bounce"
-              />
-            </div>
+        </div>
+
+        {/* Right Side */}
+        <div className="flex flex-col items-center">
+          <div className="relative border-[5px] border-[#E4DDC4] px-4 py-3 text-2xl sm:text-4xl rounded-lg shadow-[4px_4px_0px_#000] text-center" style={{ fontFamily: 'var(--font-vt323)' }}>
+            <span className="block">LET&apos;S PLAN YOUR EVENT!</span>
+            <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
           </div>
+          <Image
+            src="/logo.png"
+            alt="logo"
+            width={250}
+            height={250}
+            className="mt-6"
+          />
         </div>
       </div>
     </main>
