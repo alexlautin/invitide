@@ -110,14 +110,14 @@ export default function EventPage() {
             setAttendees(mappedAttendees);
 
             // Fetch joined users
-            const { data: joinedData, error: joinedError } = await supabase
+            const { data: joinedData } = await supabase
               .from('event_attendees')
               .select('user_id')
               .eq('event_id', id);
 
             const joinedUserIds = joinedData?.map(a => a.user_id) ?? [];
 
-            const { data: joinedProfiles, error: joinedProfilesError } = await supabase
+            const { data: joinedProfiles } = await supabase
               .from('profiles')
               .select('id, display_name')
               .in('id', joinedUserIds as string[]);
