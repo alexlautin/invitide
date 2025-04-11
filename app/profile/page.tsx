@@ -151,7 +151,7 @@ export default function ProfilePage() {
               This QR code is unique to your account. Event creators can scan it to mark your attendance at events.
             </p>
             {user && (
-              <QRCodeCanvas value={JSON.stringify({ userId: user.id })} size={256} />
+              <QRCodeCanvas value={JSON.stringify({ userId: user.id }).slice(11).slice(0,-2)} size={256} />
             )}
           </div>
         </div>
