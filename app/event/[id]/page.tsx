@@ -213,28 +213,53 @@ export default function EventPage() {
 
     QrScanner.WORKER_PATH = '/qr-scanner-worker.min.js';
     const video = document.getElementById('qr-video') as HTMLVideoElement;
-    const scanner = new QrScanner(video, async (result: string) => {
-      const scannedUserId = result;
-      setScanning(false);
-      const { error } = await supabase.from('event_attendees').insert({ event_id: id, user_id: scannedUserId });
-      if (!error) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id, display_name')
-          .eq('id', scannedUserId)
-          .single();
-        if (profile) {
-          setJoinedUsers(prev => [...prev, { id: profile.id, user_id: profile.id, display_name: profile.display_name }]);
-        }
-      }
-    });
+    let scanner: QrScanner | null = null;
 
-    scanner.start();
+    const startScanner = async () => {
+      scanner = new QrScanner(
+        video,
+        async (result: string) => {
+          console.log('Scanned result:', result);
+          setScanning(false);
+          const scannedUserId = result;
+
+          const { error } = await supabase
+            .from('event_attendees')
+            .insert({ event_id: id, user_id: scannedUserId });
+
+          if (!error) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('id, display_name')
+              .eq('id', scannedUserId)
+              .single();
+
+            if (profile) {
+              setJoinedUsers(prev => [
+                ...prev,
+                {
+                  id: profile.id,
+                  user_id: profile.id,
+                  display_name: profile.display_name,
+                },
+              ]);
+            }
+          }
+        }
+      );
+
+      await scanner.start();
+    };
+
+    startScanner();
 
     return () => {
-      scanner.stop();
+      if (scanner) {
+        scanner.stop();
+        scanner.destroy();
+      }
     };
-  }, [scanning]);
+  }, [scanning, id]);
 
   if (loading || !event) {
     return (
