@@ -72,7 +72,9 @@ export default function HomePage() {
       <div className="absolute top-4 right-4 flex flex-wrap gap-4 text-sm sm:text-base">
         {!loading && user ? (
           <>
-            <span>Welcome, {displayName ?? user.email}</span>
+            <Link href="/profile" className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300">
+              {displayName ?? user.email}
+            </Link>
             <button
               onClick={handleSignOut}
               className="border-[2px] sm:border-[4px] border-[#E4DDC4] px-4 py-1 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition"
