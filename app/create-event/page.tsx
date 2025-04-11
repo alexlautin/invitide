@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { User } from '@supabase/supabase-js';
+
 
 export default function CreateEventPage() {
     const router = useRouter();
@@ -13,7 +15,8 @@ export default function CreateEventPage() {
     const [location, setLocation] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true); // Add loading state for initial load
-    const [user, setUser] = useState<any>(null); // User state to store the authenticated user
+    const [user, setUser] = useState<User | null>(null);
+    const [eventTime, setEventTime] = useState('');
 
     useEffect(() => {
         const fetchSession = async () => {
@@ -42,13 +45,17 @@ export default function CreateEventPage() {
             setError("You must be signed in to create an event.");
             return;
         }
+        const eventDateTime = eventTime
+            ? new Date(`${eventDate}T${eventTime}`).toISOString()
+            : new Date(`${eventDate}T00:00`).toISOString();
+        console.log('Creating event with datetime:', eventDateTime);
 
         const { data, error } = await supabase
             .from('events')
             .insert([
                 {
                     name: eventName,
-                    date: new Date(eventDate).toISOString().slice(0, 10),
+                    date: eventDateTime,
                     location: location,
                     user_id: user?.id,
                 },
@@ -90,13 +97,36 @@ export default function CreateEventPage() {
                         </div>
                         <div>
                             <label className="block mb-1 text-md uppercase">Date</label>
-                            <input
-                                type="date"
-                                required
-                                value={eventDate}
-                                onChange={(e) => setEventDate(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 bg-[#1F1F1F] text-[#E4DDC4] rounded-md focus:outline-none focus:ring-2 focus:ring-[#E4DDC4]"
-                            />
+                            <div className="relative">
+                                <input
+                                    type="date"
+                                    required
+                                    value={eventDate}
+                                    onChange={(e) => setEventDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 bg-[#1F1F1F] text-[#E4DDC4] rounded-md focus:outline-none focus:ring-2 focus:ring-[#E4DDC4] appearance-none"
+                                />
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#E4DDC4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block mb-1 text-md uppercase">Time (Optional)</label>
+                            <div className="relative">
+                                <input
+                                    type="time"
+                                    value={eventTime}
+                                    onChange={(e) => setEventTime(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 bg-[#1F1F1F] text-[#E4DDC4] rounded-md focus:outline-none focus:ring-2 focus:ring-[#E4DDC4] appearance-none"
+                                />
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#E4DDC4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label className="block mb-1 text-md uppercase">Location</label>
@@ -119,8 +149,7 @@ export default function CreateEventPage() {
                 </div>
                 <div className="hidden sm:flex flex-col items-center mt-8 sm:mt-0">
                     <div className="relative bg-[#1F1F1F] border-[5px] border-[#E4DDC4] px-4 py-3 text-3xl rounded-lg shadow-[4px_4px_0_#000]" style={{ fontFamily: 'var(--font-vt323)' }}>
-                        <span>Let's Plan Your Event!</span>
-                        <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
+                        <span>Let&apos;s Plan Your Event!</span>                        <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />
                     </div>
                     <Image
                         src="/logo.png"

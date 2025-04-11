@@ -2,7 +2,7 @@ const { fontFamily } = require('tailwindcss/defaultTheme');
 
 module.exports = {
   content: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
-  safelist: ['animate-star'], // Ensure this class is not purged
+  safelist: ['animate-star', 'animate-slide-in-out'], // Ensure these classes are not purged
   theme: {
     extend: {
       keyframes: {
