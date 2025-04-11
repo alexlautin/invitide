@@ -179,7 +179,7 @@ export default function FindEvents() {
         )}
       </div>
       {copied && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#1F1F1F] border-[4px] border-[#E4DDC4] text-[#E4DDC4] px-6 py-3 rounded-lg shadow-[4px_4px_0px_#000] text-xl font-mono animate-slide-in-out z-50">
+        <div className="fixed bottom-4 left-1/2 w-[90%] sm:w-auto max-w-xs sm:max-w-sm transform -translate-x-1/2 bg-[#1F1F1F] border-[4px] border-[#E4DDC4] text-[#E4DDC4] px-4 py-2 rounded-lg shadow-[4px_4px_0px_#000] text-base sm:text-xl font-mono animate-slide-in-out z-50 text-center">
           Event link copied to clipboard!
         </div>
       )}

@@ -86,13 +86,15 @@ export default function EventPage() {
       <div className="flex flex-1 items-center justify-center">
         <div className="max-w-2xl w-full px-4">
           <div className="bg-[#1F1F1F] border-[5px] border-[#E4DDC4] rounded-lg p-8 shadow-[4px_4px_0px_#000]">
-            <Image
-              src={event.image_url}
-              alt={event.name}
-              width={800}
-              height={400}
-              className="w-full h-64 object-cover rounded-lg"
-            />
+            {event.image_url?.trim() ? (
+              <Image
+                src={event.image_url}
+                alt={event.name}
+                width={800}
+                height={400}
+                className="w-full h-64 object-cover rounded-lg"
+              />
+            ) : null}
 
             <h1 className="text-4xl mb-4" style={{ fontFamily: 'var(--font-vt323)' }}>
               {event.name}
@@ -136,7 +138,7 @@ export default function EventPage() {
         </div>
       </div>
       {copied && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#1F1F1F] border-[4px] border-[#E4DDC4] text-[#E4DDC4] px-6 py-3 rounded-lg shadow-[4px_4px_0px_#000] text-xl font-mono animate-slide-in-out z-50">
+        <div className="fixed bottom-4 left-1/2 w-[90%] sm:w-auto max-w-xs sm:max-w-sm transform -translate-x-1/2 bg-[#1F1F1F] border-[4px] border-[#E4DDC4] text-[#E4DDC4] px-4 py-2 rounded-lg shadow-[4px_4px_0px_#000] text-base sm:text-xl font-mono animate-slide-in-out z-50 text-center">
           Event link copied to clipboard!
         </div>
       )}
