@@ -462,21 +462,22 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
             )}
 
             <div className="flex flex-col gap-4">
-              <div className="flex gap-4">
-                {isHost === true ? (
+              <div className="flex flex-col sm:flex-row gap-4">
+                {isHost ? (
                   <button
                     onClick={() => setScanning(true)}
-                    className="flex-1 border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                    className="block w/full whitespace-nowrap border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                   >
                     Scan QR Code
                   </button>
                 ) : (
                   <button
                     onClick={handleRSVP}
-                    className={`flex-1 border-[4px] text-[18px] font-mono px-4 py-2 uppercase transition duration-300 ${isRSVPed
-                      ? 'bg-[#E4DDC4] text-[#1F1F1F]'
-                      : 'border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
-                      }`}
+                    className={`block w-full border-[4px] text-[18px] font-mono text-center px-4 py-2 uppercase transition duration-300 ${
+                      isRSVPed
+                        ? 'bg-[#E4DDC4] text-[#1F1F1F]'
+                        : 'border-[#E4DDC4] hover:bg-[#E4DDC4] hover:text-[#1F1F1F]'
+                    }`}
                   >
                     {isRSVPed ? 'Cancel RSVP' : 'RSVP'}
                   </button>
@@ -489,23 +490,20 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                       setTimeout(() => setCopied(false), 2000);
                     });
                   }}
-                  className="flex-2 border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                  className="block w-full whitespace-nowrap border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                 >
                   Copy Event Link
                 </button>
                 {meetingLink && (
-                <div className="mt-0 flex items-center gap-2">
                   <a
                     href={meetingLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex border-[4px] text-[18px] center font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                    className="block w-full border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                   >
                     Video Call
                   </a>
-                </div>
-              )}
-              
+                )}
               </div>
               <div className="mt-2">
                 <button
