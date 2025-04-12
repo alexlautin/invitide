@@ -3,6 +3,13 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/react"
 import "./customCursor.css";
 
+export const metadata = {
+  title: {
+    default: 'Invitide',
+    template: '%s | Invitide',
+  },
+};
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

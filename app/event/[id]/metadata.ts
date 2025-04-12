@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (!id) {
     return {
-      title: 'Invalid Event',
+      title: 'Invalid Event | Invitide',
       description: 'No event ID provided.',
     };
   }
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   if (error || !event) {
     return {
-      title: 'Event Not Found',
+      title: 'Event Not Found | Invitide',
       description: 'Sorry, this event could not be found.',
     };
   }
@@ -42,8 +42,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   const metaDescription = `Join us on ${formattedDate} at ${event.location}`;
 
-  const metadata = {
-    title: `${event.name} | Invitide`,
+  return {
+    title: `${event.name}`,
     description: metaDescription,
     openGraph: {
       title: event.name,
@@ -67,6 +67,4 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       images: ['https://invitide.com/og-event.png'],
     },
   };
-
-  return metadata;
 }
