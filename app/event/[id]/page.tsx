@@ -24,6 +24,7 @@ interface Event {
   location: string;
   image_url: string;
   user_id: string;
+  meeting_link?: string | null;
   profiles?: { display_name: string } | null;
 }
 
@@ -52,6 +53,45 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const [isHost, setIsHost] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [meetingLink, setMeetingLink] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!event || !user) {
+      console.log('Waiting for event and user data to load.');
+      return;
+    }
+
+    const createVideoCallLink = async () => {
+      try {
+        if (!event.meeting_link) {
+          const uniqueRoomName = `event-room-${Date.now()}`;
+          const jitsiMeetingLink = `https://meet.jit.si/${uniqueRoomName}`;
+
+          const { data, error } = await supabase
+            .from('events')
+            .update({ meeting_link: jitsiMeetingLink })
+            .eq('id', event.id)
+            .select('meeting_link')
+            .single();
+
+          if (error) {
+            console.error('Error saving meeting link to database:', error);
+            return;
+          }
+
+          if (data?.meeting_link) {
+            setMeetingLink(data.meeting_link);
+          }
+        } else {
+          setMeetingLink(event.meeting_link);
+        }
+      } catch (error) {
+        console.error('Error creating video call link:', error);
+      }
+    };
+
+    createVideoCallLink();
+  }, [event, user]);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -145,6 +185,12 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
 
     fetchEvent();
   }, [id, user]);
+
+  useEffect(() => {
+    if (event?.meeting_link) {
+      setMeetingLink(event.meeting_link);
+    }
+  }, [event]);
 
   const handleRSVP = async () => {
     if (!user) {
@@ -443,11 +489,23 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                       setTimeout(() => setCopied(false), 2000);
                     });
                   }}
-                  className="flex-1 border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                  className="flex-2 border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                 >
                   Copy Event Link
                 </button>
-
+                {meetingLink && (
+                <div className="mt-0 flex items-center gap-2">
+                  <a
+                    href={meetingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex border-[4px] text-[18px] center font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                  >
+                    Video Call
+                  </a>
+                </div>
+              )}
+              
               </div>
               <div className="mt-2">
                 <button
@@ -502,6 +560,14 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                   Add to Calendar
                 </button>
               </div>
+              {/* {meetingLink && (
+                <div className="mt-4">
+                  <p>Video Call Link:</p>
+                  <a href={meetingLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                    {meetingLink}
+                  </a>
+                </div>
+              )} */}
               {isHost && (
                 <div className="flex justify-center">
                   <button
