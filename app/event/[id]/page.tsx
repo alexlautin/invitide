@@ -59,6 +59,20 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const [generatedDescription, setGeneratedDescription] = useState<string | null>(null);
 
   useEffect(() => {
+    const checkSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            console.log('User session loaded:', session.user);
+            setUser(session.user);
+        } else {
+            console.error('No user session found.');
+        }
+    };
+
+    checkSession();
+}, []);
+
+  useEffect(() => {
     if (!event || !user) {
       console.log('Waiting for event and user data to load.');
       return;
@@ -96,14 +110,44 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
     createVideoCallLink();
   }, [event, user]);
 
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+useEffect(() => {
+    if (!id) {
+        console.error('Event ID is missing. Cannot fetch attendees.');
+        return;
+    }
+
+    if (!user) {
+      console.error('[Error] User session not loaded yet — delaying attendee fetch.');
+      return;
+    }
+
+    console.log('Fetching attendees for event ID:', id, 'and user:', user.id);
+
+    const fetchAttendees = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('event_attendees')
+                .select('user_id, profiles(display_name)')
+                .eq('event_id', id);
+
+            if (error) {
+                console.error('Error fetching attendees from Supabase:', error);
+                return;
+            }
+
+            if (!data) {
+                console.error('No attendees found for the given event ID.');
+                return;
+            }
+
+            setAttendees(data);
+        } catch (_err) {
+            console.error('Unexpected error fetching attendees:', _err);
+        }
     };
 
-    checkSession();
-  }, []);
+    fetchAttendees();
+}, [id, user]);
 
   useEffect(() => {
     if (!id) return;
@@ -519,9 +563,9 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                 <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Location:</span> {event.location}
                 </p>
-                {/* <p className="text-[#E4DDC4]">
+                <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Description:</span> {event.description}
-                </p> */}
+                </p>
                 {generatedDescription && (
                   <p className="text-[#E4DDC4]">
                     <span className="font-semibold">AI Description:</span> {generatedDescription}
@@ -541,7 +585,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                   <div className="space-y-2">
                     {attendees.map((attendee) => (
                       <div
-                        key={attendee.id}
+                        key={attendee.user_id}
                         className="flex items-center justify-between bg-[#1F1F1F] border-2 border-[#E4DDC4] p-3 rounded"
                       >
                         <div>
