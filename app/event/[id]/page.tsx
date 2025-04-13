@@ -140,7 +140,13 @@ useEffect(() => {
                 return;
             }
 
-            setAttendees(data);
+            const mappedAttendees = data.map((attendee) => ({
+                id: attendee.user_id, // Use user_id as id
+                user_id: attendee.user_id,
+                display_name: attendee.profiles[0]?.display_name || 'Unknown', // Extract display_name from profiles
+            }));
+
+            setAttendees(mappedAttendees);
         } catch (_err) {
             console.error('Unexpected error fetching attendees:', _err);
         }
