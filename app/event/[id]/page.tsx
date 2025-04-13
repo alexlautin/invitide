@@ -519,11 +519,11 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                 <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Location:</span> {event.location}
                 </p>
-                <p className="text-[#E4DDC4]">
+                {/* <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Description:</span> {event.description}
-                </p>
+                </p> */}
                 {generatedDescription && (
-                  <p className="text-[#E4DDC4] italic">
+                  <p className="text-[#E4DDC4]">
                     <span className="font-semibold">AI Description:</span> {generatedDescription}
                   </p>
                 )}
