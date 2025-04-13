@@ -327,7 +327,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
     };
 
     try {
-      const prompt = `Write a short and engaging description for the event named '${event.name}' happening at ${event.location} on ${new Date(event.date).toLocaleDateString()} It should be one sentence. Add " sparkle emoji AI GENERATED sparkle emoji" to the end of every response. It must be that exact phrase. Only give one response and one option. You are a moderated chat bot, so no explicit phrases or anything you deem inappropriate will be tolerated. The title may not include any such thing that you do not think is appropriate. You do not have to generate anything that goes against your filter.`;
+      const prompt = `Write a short and engaging description for the event named '${event.name}' happening at ${event.location} on ${new Date(event.date).toLocaleDateString()} It should be one sentence. Add " sparkle emoji AI GENERATED sparkle emoji" to the end of every response. Only give one response and one option. You are a moderated chat bot, so no explicit phrases or anything you deem inappropriate will be tolerated. The title may not include any such thing that you do not think is appropriate. You do not have to generate anything that goes against your filter.`;
       const response = await retryFetch('/api/generate-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
