@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 import QrScanner from 'qr-scanner';
+// import { generateEventImage } from '@/utils/gemini';
 
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
@@ -54,6 +55,8 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [meetingLink, setMeetingLink] = useState<string | null>(null);
+  // const [ setGeneratedText] = useState<string | null>(null);
+  const [generatedDescription, setGeneratedDescription] = useState<string | null>(null);
 
   useEffect(() => {
     if (!event || !user) {
@@ -261,6 +264,93 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
       setIsDeleting(false);
     }
   };
+
+  // async function handleGenerateImage() {
+  //   if (!event) return;
+
+  //   const retryFetch = async (url, options, retries = 3, delay = 1000) => {
+  //     for (let i = 0; i < retries; i++) {
+  //       const response = await fetch(url, options);
+  //       if (response.ok) return response;
+  //       if (i < retries - 1) await new Promise((resolve) => setTimeout(resolve, delay));
+  //     }
+  //     throw new Error('API request failed after retries');
+  //   };
+
+  //   try {
+  //     const prompt = `Generate an image for the event named '${event.name}' with a theme that matches its description.`;
+  //     const response = await retryFetch('/api/generate-content', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ prompt }),
+  //     });
+
+  //     const data = await response.json();
+  //     console.log('API Response:', data);
+
+  //     if (data && data.contents && data.contents[0]?.parts[0]?.text) {
+  //       setGeneratedText(data.contents[0].parts[0].text);
+  //     } else {
+  //       setGeneratedText('No text generated from the API response.');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error generating image:', error);
+  //     if (error.message.includes('overloaded')) {
+  //       setGeneratedText('The model is currently overloaded. Please try again in a few minutes.');
+  //     } else {
+  //       setGeneratedText('An unexpected error occurred. Please try again later.');
+  //     }
+  //   }
+  // }
+
+  async function handleGenerateDescription() {
+    if (!event) return;
+
+    interface RetryFetchOptions {
+      method: string;
+      headers: Record<string, string>;
+      body?: string;
+    }
+
+    const retryFetch = async (
+      url: string,
+      options: RetryFetchOptions,
+      retries: number = 3,
+      delay: number = 1000
+    ): Promise<Response> => {
+      for (let i = 0; i < retries; i++) {
+      const response: Response = await fetch(url, options);
+      if (response.ok) return response;
+      if (i < retries - 1) await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+      throw new Error('API request failed after retries');
+    };
+
+    try {
+      const prompt = `Write a short and engaging description for the event named '${event.name}' happening at ${event.location} on ${new Date(event.date).toLocaleDateString()} It should be one sentence. Add " sparkle emoji AI GENERATED DESCRIPTION: to the start of every response. Only give one response and one option.`;
+      const response = await retryFetch('/api/generate-content', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+      console.log('API Response:', data); // Log the full API response for debugging
+
+      if (data && data.contents && data.contents[0]?.parts[0]?.text) {
+        setGeneratedDescription(data.contents[0].parts[0].text);
+      } else {
+        setGeneratedDescription(data.text ?? JSON.stringify(data, null, 2));
+      }
+    } catch (error) {
+      console.error('Error generating description:', error);
+      if (error instanceof Error && error.message.includes('overloaded')) {
+        setGeneratedDescription('The model is currently overloaded. Please try again in a few minutes.');
+      } else {
+        setGeneratedDescription('An unexpected error occurred. Please try again later.');
+      }
+    }
+  }
 
   useEffect(() => {
     if (!scanning) return;
@@ -558,14 +648,32 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                   Add to Calendar
                 </button>
               </div>
-              {/* {meetingLink && (
-                <div className="mt-4">
-                  <p>Video Call Link:</p>
-                  <a href={meetingLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
-                    {meetingLink}
-                  </a>
+              {/* {isHost && (
+                <div className="mt-2">
+                  <button
+                    onClick={handleGenerateImage}
+                    className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                  >
+                    Generate Event Image
+                  </button>
+                  {generatedText && (
+                    <p className="mt-4 text-center text-[#E4DDC4]">{generatedText}</p>
+                  )}
                 </div>
               )} */}
+              {isHost && (
+                <div className="mt-2">
+                  <button
+                    onClick={handleGenerateDescription}
+                    className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                  >
+                    Generate Event Description
+                  </button>
+                  {generatedDescription && (
+                    <p className="mt-4 text-center text-[#E4DDC4]">{generatedDescription}</p>
+                  )}
+                </div>
+              )}
               {isHost && (
                 <div className="flex justify-center">
                   <button
