@@ -327,7 +327,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
     };
 
     try {
-      const prompt = `Write a short and engaging description for the event named '${event.name}' happening at ${event.location} on ${new Date(event.date).toLocaleDateString()} It should be one sentence. Add " sparkle emoji AI GENERATED DESCRIPTION: to the start of every response. Only give one response and one option.`;
+      const prompt = `Write a short and engaging description for the event named '${event.name}' happening at ${event.location} on ${new Date(event.date).toLocaleDateString()} It should be one sentence. Add " sparkle emoji AI GENERATED sparkle emoji" to the end of every response. It must be that exact phrase. Only give one response and one option.`;
       const response = await retryFetch('/api/generate-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -336,6 +336,22 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
 
       const data = await response.json();
       console.log('API Response:', data); // Log the full API response for debugging
+
+      const generatedDescription = data?.text || 'No description generated.';
+
+      // Update the event description in the database
+      const { error } = await supabase
+        .from('events')
+        .update({ description: generatedDescription })
+        .eq('id', event.id);
+
+      if (error) {
+        console.error('Error updating event description:', error);
+        return;
+      }
+
+      // Update the local state
+      setEvent((prev) => prev ? { ...prev, description: generatedDescription } : prev);
 
       if (data && data.contents && data.contents[0]?.parts[0]?.text) {
         setGeneratedDescription(data.contents[0].parts[0].text);
@@ -489,7 +505,6 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
             <h1 className="text-4xl mb-4" style={{ fontFamily: 'var(--font-vt323)' }}>{event.name}</h1>
 
             <div className="mb-6">
-              <p className="text-lg mb-4">{event.description}</p>
               <div className="flex flex-col gap-2">
                 <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Date & Time:</span>{' '}
@@ -503,6 +518,9 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                 </p>
                 <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Location:</span> {event.location}
+                </p>
+                <p className="text-[#E4DDC4]">
+                  <span className="font-semibold">Description:</span> {event.description}
                 </p>
                 <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
@@ -589,7 +607,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                     href={meetingLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                    className="block w/full border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                   >
                     Video Call
                   </a>
@@ -667,11 +685,11 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                     onClick={handleGenerateDescription}
                     className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                   >
-                    Generate Event Description
+                    Generate AI Event Description
                   </button>
-                  {generatedDescription && (
+                  {/* {generatedDescription && (
                     <p className="mt-4 text-center text-[#E4DDC4]">{generatedDescription}</p>
-                  )}
+                  )} */}
                 </div>
               )}
               {isHost && (
