@@ -386,7 +386,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
         <meta name="twitter:description" content={`Join us on ${new Date(event.date).toLocaleString()}`} />
         <meta name="twitter:image" content={event.image_url} />
       </Head>
-      <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col text-[#E4DDC4] p-8`}>
+      <main className={`${jetBrainsMono.variable} ${vt323.variable} pt-16 sm:pt-8 min-h-screen flex flex-col text-[#E4DDC4] p-8`}>
         <Link href="/my-events" className="absolute top-4 left-4 text-[#E4DDC4] hover:underline text-2xl">← Back to Events</Link>
 
       <div className="flex flex-1 items-center justify-center">
@@ -422,7 +422,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
 
             {/* Attendees Section - Only visible to host */}
             {isHost && (
-              <div className="mb-6">
+              <div className="host-section mb-6">
                 <h2 className="text-2xl font-mono mb-4">Attendees ({attendees.length})</h2>
                 {attendees.length > 0 ? (
                   <div className="space-y-2">
@@ -445,7 +445,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
 
             {/* Joined Users Section - Only visible to host */}
             {isHost && (
-              <div className="mb-6">
+              <div className="host-section mb-6">
                 <h2 className="text-2xl font-mono mb-4">Joined Users ({joinedUsers.length})</h2>
                 {joinedUsers.length > 0 ? (
                   <div className="space-y-2">
@@ -635,6 +635,52 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
         </div>
       )}
       </main>
+      <style jsx>{`
+        /* Adjust spacing for mobile view */
+        @media (max-width: 640px) {
+          .fixed.bottom-4.left-1\/2.transform.-translate-x-1\/2.w-\[90\%\] {
+            padding: 1rem;
+            margin: 0 auto;
+          }
+
+          .w-full.max-w-sm {
+            margin: 0 auto;
+            padding: 1rem;
+          }
+
+          .mt-4.w-full {
+            margin-top: 1rem;
+          }
+        }
+
+        /* Adjust spacing for the back-to-events link on mobile */
+        @media (max-width: 640px) {
+          .absolute.top-4.left-4 {
+            top: 1.5rem;
+            left: 1.5rem;
+            font-size: 1.25rem;
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+          }
+        }
+
+        /* Adjust spacing for host-specific elements on mobile */
+        @media (max-width: 640px) {
+          .host-section {
+            margin-top: 1.5rem;
+            padding: 1rem;
+          }
+
+          .host-section h2 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+          }
+
+          .host-section .space-y-2 > div {
+            margin-bottom: 0.5rem;
+          }
+        }
+      `}</style>
     </>
   );
 }
