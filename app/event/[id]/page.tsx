@@ -377,7 +377,7 @@ useEffect(() => {
     };
 
     try {
-      const prompt = `Write a short and engaging description for the event named '${event.name}' happening at ${event.location} on ${new Date(event.date).toLocaleDateString()} It should be one sentence. Add " sparkle emoji AI GENERATED sparkle emoji" to the end of every response. Only give one response and one option. You are a moderated chat bot, so no explicit phrases or anything you deem inappropriate will be tolerated. The title may not include any such thing that you do not think is appropriate. You do not have to generate anything that goes against your filter.`;
+      const prompt = `Write a short and engaging description for the event named '${event.name}' happening at ${event.location} on ${new Date(event.date).toLocaleDateString()} It should be one sentence. Only give one response and one option. You are a moderated chat bot, so no explicit phrases or anything you deem inappropriate will be tolerated. The title may not include any such thing that you do not think is appropriate. You do not have to generate anything that goes against your filter.`;
       const response = await retryFetch('/api/generate-content', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -570,7 +570,7 @@ useEffect(() => {
                   <span className="font-semibold">Location:</span> {event.location}
                 </p>
                 <p className="text-[#E4DDC4]">
-                  <span className="font-semibold">Description:</span> {event.description || 'No description available.'}
+                    <span className="font-semibold">Description:</span> {event.description ? `${event.description} ✨ AI GENERATED ✨` : 'No description available.'}
                 </p>
                 <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
