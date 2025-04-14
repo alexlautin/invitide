@@ -99,7 +99,7 @@ export default function HomePage() {
         <h1 className="text-2xl sm:text-3xl md:text-4xl uppercase font-mono">Invitide</h1>
         
         {/* Auth Links */}
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 pr-2 pt-2">
           {!loading && user ? (
             <>
               <Link 
@@ -141,10 +141,10 @@ export default function HomePage() {
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row gap-8 sm:gap-12 items-center justify-center flex-1 max-w-7xl mx-auto">
         {/* Left Side */}
-        <div className="flex flex-col text-center lg:text-left max-w-2xl">
+        <div className="flex flex-col text-left max-w-2xl">
           <p
             className="text-3xl sm:text-4xl md:text-6xl lg:text-[104px] uppercase mb-4 leading-tight"
-            style={{ fontFamily: 'var(--font-vt323)' }}
+            style={{ fontFamily: 'var(--font-vt323)', textAlign: 'left' }}
           >
             Ride the Wave <br />
             of Connection.
@@ -178,7 +178,7 @@ export default function HomePage() {
         </div>
 
         {/* Right Side */}
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center mt-[-40px]">
           <div className="relative border-[5px] border-[#E4DDC4] px-4 py-3 text-xl sm:text-2xl md:text-4xl rounded-lg shadow-[4px_4px_0px_#000] text-center" style={{ fontFamily: 'var(--font-vt323)' }}>
             <span className="block">LET&apos;S PLAN YOUR EVENT!</span>
             <div className="absolute bottom-[-13px] left-[calc(50%-13px)] w-0 h-0 border-l-[13px] border-r-[13px] border-t-[13px] border-l-transparent border-r-transparent border-t-[#E4DDC4]" />

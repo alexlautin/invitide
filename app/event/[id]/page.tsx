@@ -570,7 +570,7 @@ useEffect(() => {
                   <span className="font-semibold">Location:</span> {event.location}
                 </p>
                 <p className="text-[#E4DDC4]">
-                    <span className="font-semibold">Description:</span> {event.description ? `${event.description} ✨ AI GENERATED ✨` : 'No description available.'}
+                  <span className="font-semibold">Description:</span> {generatedDescription?.trim() || (event.description ? `${event.description} ✨ AI GENERATED ✨` : 'No description available.')}
                 </p>
                 <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
