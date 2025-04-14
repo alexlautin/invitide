@@ -624,7 +624,7 @@ useEffect(() => {
                 {isHost ? (
                   <button
                     onClick={() => setScanning(true)}
-                    className="block w/full whitespace-nowrap border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                    className="block w-full whitespace-nowrap border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                   >
                     Scan QR Code
                   </button>
@@ -657,7 +657,7 @@ useEffect(() => {
                     href={meetingLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w/full border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                    className="block w-full border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                   >
                     Video Call
                   </a>
