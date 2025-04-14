@@ -570,13 +570,8 @@ useEffect(() => {
                   <span className="font-semibold">Location:</span> {event.location}
                 </p>
                 <p className="text-[#E4DDC4]">
-                  <span className="font-semibold">Description:</span> {event.description}
+                  <span className="font-semibold">Description:</span> {event.description || 'No description available.'}
                 </p>
-                {generatedDescription && (
-                  <p className="text-[#E4DDC4]">
-                    <span className="font-semibold">AI Description:</span> {generatedDescription}
-                  </p>
-                )}
                 <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
                 </p>
