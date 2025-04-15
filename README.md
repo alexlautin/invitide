@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Invitide
+
+Invitide is a modern event management platform built with Next.js, Supabase, and AI-powered features. Easily create, manage, and share events with friends, generate AI event descriptions, and track attendance with QR codes.
+
+## Features
+- Create and manage events
+- AI-generated event descriptions
+- RSVP and attendee management
+- QR code check-in for event attendance
+- User authentication (email/password, GitHub OAuth)
+- User profiles with display names
+- Video call integration (Jitsi)
+- Responsive, modern UI
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js (v18+ recommended)
+- npm, yarn, or pnpm
+- Supabase project (with tables: `events`, `event_attendees`, `profiles`)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Installation
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/alexlautin/invitide.git
+   cd invitide
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. **Configure environment variables:**
+   - Copy `.env.local.example` to `.env.local` and fill in your Supabase and API keys.
+   - Required variables:
+     - `SUPABASE_URL`
+     - `NEXT_PUBLIC_SUPABASE_URL`
+     - `SUPABASE_API_KEY`
+     - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+     - `SUPABASE_SERVICE_ROLE_KEY`
+     - `GOOGLE_API_KEY` (for AI descriptions)
+     - `NEXT_PUBLIC_GEMINI_API_KEY` (for Gemini AI)
 
-## Learn More
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   # or
+   pnpm dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+5. **Open the app:**
+   Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
+- `app/` - Next.js app directory (pages, components, API routes)
+- `lib/` - Supabase client setup
+- `utils/` - Utility functions
+- `public/` - Static assets
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
+Deploy easily on [Vercel](https://vercel.com/) or your preferred platform. See [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying).
 
-## Deploy on Vercel
+## License
+MIT
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Made by Alex Lautin, Andy Blumberg, Jake Floch, Saif Farooqi, and Aman Bhayani
