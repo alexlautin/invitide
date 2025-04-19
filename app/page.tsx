@@ -155,7 +155,7 @@ export default function HomePage() {
           >
             Create or join an event in seconds.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8 sm:mb-0">
             <button
               onClick={() => {
                 if (!user) {
