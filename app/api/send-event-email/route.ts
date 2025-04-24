@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev', // Use Resend sandbox sender
+        from: 'noreply@sevenworks.tech', // Use your verified domain
         to,
         subject: `You're invited: ${event.name}`,
         text: emailBody,
