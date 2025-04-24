@@ -55,8 +55,10 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [meetingLink, setMeetingLink] = useState<string | null>(null);
-  // const [ setGeneratedText] = useState<string | null>(null);
   const [generatedDescription, setGeneratedDescription] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteStatus, setInviteStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>("idle");
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -88,22 +90,22 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
             .from('events')
             .update({ meeting_link: jitsiMeetingLink })
             .eq('id', event.id)
-            .select('meeting_link')
-            .single();
+            .select('meeting_link');
 
           if (error) {
             console.error('Error saving meeting link to database:', error);
+            alert('Error saving meeting link: ' + JSON.stringify(error));
             return;
           }
 
-          if (data?.meeting_link) {
-            setMeetingLink(data.meeting_link);
+          if (data && data.length > 0 && data[0].meeting_link) {
+            setMeetingLink(data[0].meeting_link);
           }
         } else {
           setMeetingLink(event.meeting_link);
         }
-      } catch (error) {
-        console.error('Error creating video call link:', error);
+      } catch {
+        console.error('Error creating video call link');
       }
     };
 
@@ -314,44 +316,6 @@ useEffect(() => {
       setIsDeleting(false);
     }
   };
-
-  // async function handleGenerateImage() {
-  //   if (!event) return;
-
-  //   const retryFetch = async (url, options, retries = 3, delay = 1000) => {
-  //     for (let i = 0; i < retries; i++) {
-  //       const response = await fetch(url, options);
-  //       if (response.ok) return response;
-  //       if (i < retries - 1) await new Promise((resolve) => setTimeout(resolve, delay));
-  //     }
-  //     throw new Error('API request failed after retries');
-  //   };
-
-  //   try {
-  //     const prompt = `Generate an image for the event named '${event.name}' with a theme that matches its description.`;
-  //     const response = await retryFetch('/api/generate-content', {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({ prompt }),
-  //     });
-
-  //     const data = await response.json();
-  //     console.log('API Response:', data);
-
-  //     if (data && data.contents && data.contents[0]?.parts[0]?.text) {
-  //       setGeneratedText(data.contents[0].parts[0].text);
-  //     } else {
-  //       setGeneratedText('No text generated from the API response.');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error generating image:', error);
-  //     if (error.message.includes('overloaded')) {
-  //       setGeneratedText('The model is currently overloaded. Please try again in a few minutes.');
-  //     } else {
-  //       setGeneratedText('An unexpected error occurred. Please try again later.');
-  //     }
-  //   }
-  // }
 
   async function handleGenerateDescription() {
     if (!event) return;
@@ -619,6 +583,60 @@ useEffect(() => {
               </div>
             )}
 
+            {isHost && (
+              <div className="mb-6">
+                <h2 className="text-2xl font-mono mb-2">Send Event Invite</h2>
+                <div className="flex flex-col sm:flex-row gap-4 items-stretch">
+                  <input
+                    type="email"
+                    placeholder="Recipient's email"
+                    value={inviteEmail}
+                    onChange={e => setInviteEmail(e.target.value)}
+                    className="flex-1 px-4 py-2 text-[18px] font-mono border-[4px] border-[#E4DDC4] bg-[#1F1F1F] text-[#E4DDC4] focus:outline-none focus:ring-2 focus:ring-[#E4DDC4] placeholder-[#b8b8b8]"
+                  />
+                  <button
+                    onClick={async () => {
+                      setInviteStatus('sending');
+                      setInviteError(null);
+                      try {
+                        const res = await fetch('/api/send-event-email', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            to: inviteEmail,
+                            event: {
+                              name: event.name,
+                              date: event.date,
+                              location: event.location,
+                              link: `${window.location.origin}/event/${event.id}`,
+                            },
+                          }),
+                        });
+                        if (res.ok) {
+                          setInviteStatus('sent');
+                          setInviteEmail('');
+                          setTimeout(() => setInviteStatus('idle'), 2000);
+                        } else {
+                          const data = await res.json();
+                          setInviteStatus('error');
+                          setInviteError(data.error || 'Failed to send email');
+                        }
+                      } catch {
+                        setInviteStatus('error');
+                        setInviteError('Failed to send email');
+                      }
+                    }}
+                    disabled={inviteStatus === 'sending' || !inviteEmail}
+                    className="block border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {inviteStatus === 'sending' ? 'Sending...' : 'Send Invite'}
+                  </button>
+                </div>
+                {inviteStatus === 'sent' && <p className="text-green-400 mt-2">Invite sent!</p>}
+                {inviteStatus === 'error' && <p className="text-red-500 mt-2">{inviteError}</p>}
+              </div>
+            )}
+
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row gap-4">
                 {isHost ? (
@@ -663,45 +681,43 @@ useEffect(() => {
                   </a>
                 )}
               </div>
-              <div className="mt-2">
+              <div className="flex flex-col sm:flex-row gap-4 mt-2">
                 <button
                   onClick={() => {
-                    if (!event) return;
-
-                  const pad = (n: number) => n.toString().padStart(2, '0');
+                    const pad = (n: number) => n.toString().padStart(2, '0');
                   
-                  const formatDate = (date: Date) => {
-                    return (
-                      date.getUTCFullYear().toString() +
-                      pad(date.getUTCMonth() + 1) +
-                      pad(date.getUTCDate()) +
-                      'T' +
-                      pad(date.getUTCHours()) +
-                      pad(date.getUTCMinutes()) +
-                      pad(date.getUTCSeconds()) +
-                      'Z'
-                    );
-                  };
+                    const formatDate = (date: Date) => {
+                      return (
+                        date.getUTCFullYear().toString() +
+                        pad(date.getUTCMonth() + 1) +
+                        pad(date.getUTCDate()) +
+                        'T' +
+                        pad(date.getUTCHours()) +
+                        pad(date.getUTCMinutes()) +
+                        pad(date.getUTCSeconds()) +
+                        'Z'
+                      );
+                    };
                   
-                  const now = new Date();
-                  const start = new Date(event.date);
-                  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // 2-hour default duration
+                    const now = new Date();
+                    const start = new Date(event.date);
+                    const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // 2-hour default duration
                   
-                  const icsContent = [
-                    'BEGIN:VCALENDAR',
-                    'VERSION:2.0',
-                    'CALSCALE:GREGORIAN',
-                    'BEGIN:VEVENT',
-                    `UID:${event.id}@invitide`,
-                    `SUMMARY:${event.name}`,
-                    `DESCRIPTION:${event.description || ''}`,
-                    `LOCATION:${event.location}`,
-                    `DTSTAMP:${formatDate(now)}`,
-                    `DTSTART:${formatDate(start)}`,
-                    `DTEND:${formatDate(end)}`,
-                    'END:VEVENT',
-                    'END:VCALENDAR'
-                  ].join('\r\n');
+                    const icsContent = [
+                      'BEGIN:VCALENDAR',
+                      'VERSION:2.0',
+                      'CALSCALE:GREGORIAN',
+                      'BEGIN:VEVENT',
+                      `UID:${event.id}@invitide`,
+                      `SUMMARY:${event.name}`,
+                      `DESCRIPTION:${event.description || ''}`,
+                      `LOCATION:${event.location}`,
+                      `DTSTAMP:${formatDate(now)}`,
+                      `DTSTART:${formatDate(start)}`,
+                      `DTEND:${formatDate(end)}`,
+                      'END:VEVENT',
+                      'END:VCALENDAR'
+                    ].join('\r\n');
 
                     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
                     const link = document.createElement('a');
@@ -715,35 +731,17 @@ useEffect(() => {
                 >
                   Add to Calendar
                 </button>
-              </div>
-              {/* {isHost && (
-                <div className="mt-2">
-                  <button
-                    onClick={handleGenerateImage}
-                    className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
-                  >
-                    Generate Event Image
-                  </button>
-                  {generatedText && (
-                    <p className="mt-4 text-center text-[#E4DDC4]">{generatedText}</p>
-                  )}
-                </div>
-              )} */}
-              {isHost && (
-                <div className="mt-2">
+                {isHost && (
                   <button
                     onClick={handleGenerateDescription}
                     className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                   >
-                    Generate AI Event Description
+                    Create AI Description
                   </button>
-                  {/* {generatedDescription && (
-                    <p className="mt-4 text-center text-[#E4DDC4]">{generatedDescription}</p>
-                  )} */}
-                </div>
-              )}
+                )}
+              </div>
               {isHost && (
-                <div className="flex justify-center">
+                <div className="flex justify-center mt-4">
                   <button
                     onClick={() => setShowDeleteModal(true)}
                     className="border-[4px] text-[18px] font-mono border-red-500 text-red-500 px-4 py-2 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition duration-300"
@@ -789,7 +787,6 @@ useEffect(() => {
             <h2 className="text-xl font-mono mb-4 text-center">Scan QR Code</h2>
             {scanStatus && (
               <div className="text-center mb-2 font-mono text-lg text-[#E4DDC4]">
-                {/* {scanStatus} */}
               </div>
             )}
             <div className="relative">
