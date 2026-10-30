@@ -567,8 +567,13 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
             </div>
             <p className="mt-4 text-center text-[#E4DDC4]">{scanStatus}</p>
             {demo && (
+              <p className="mt-4 text-center text-sm opacity-70">
+                Demo codes only. Pick one from the attendee list.
+              </p>
+            )}
+            {demo && (
               <form
-                className="mt-4 flex gap-2"
+                className="mt-2 flex gap-2"
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (!manualCode.trim()) return;

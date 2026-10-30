@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getCurrentUser, createEvent, type AppUser } from '@/lib/data';
+import { useDemoMode } from '@/lib/demo/useDemoMode';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,6 +10,7 @@ import Link from 'next/link';
 
 export default function CreateEventPage() {
     const router = useRouter();
+    const demo = useDemoMode();
     const [eventName, setEventName] = useState('');
     const [eventDate, setEventDate] = useState('');
     const [location, setLocation] = useState('');
@@ -132,6 +134,7 @@ export default function CreateEventPage() {
                         >
                             Create
                         </button>
+                        {demo && <p className="text-sm opacity-70">Saved in this browser tab only.</p>}
                     </form>
                 </div>
                 <div className="hidden sm:flex flex-col items-center mt-8 sm:mt-0">
