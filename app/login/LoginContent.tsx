@@ -55,7 +55,7 @@ export default function LoginContent() {
 
                 {demo && (
                     <p className="mb-4 text-sm text-[#E4DDC4] border border-[#E4DDC4] rounded-md p-3">
-                        You&apos;re already signed in as the demo host, so sign-in is turned off in demo mode.
+                        Sign-in is off in demo mode. You&apos;re already signed in as the host.
                     </p>
                 )}
 

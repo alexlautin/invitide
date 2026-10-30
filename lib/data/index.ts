@@ -1,7 +1,4 @@
-/**
- * The single entry point for all backend access (Supabase auth/db, Gemini, Resend).
- * Pages and components must import from here, never from @supabase/supabase-js directly.
- */
+// All backend access (Supabase, Gemini, Resend) goes through here.
 import { isDemo } from '@/lib/demo/flag';
 import { demoSource } from './demo';
 import { supabaseSource } from './supabase';
@@ -9,7 +6,7 @@ import type { DataSource } from './types';
 
 export * from './types';
 
-/** Demo mode (set via /demo, kept in sessionStorage) swaps in the in-memory backend. */
+// Demo mode (set via /demo) swaps in the in-memory backend.
 const source = (): DataSource => (isDemo() ? demoSource : supabaseSource);
 
 export const getCurrentUser: DataSource['getCurrentUser'] = () => source().getCurrentUser();

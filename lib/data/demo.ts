@@ -1,7 +1,4 @@
-/**
- * In-memory backend used when demo mode is on. Makes no network requests.
- * State lives in module scope: it survives client-side navigation and resets on a full reload.
- */
+// In-memory backend for demo mode. State resets on a full reload.
 import { disableDemo } from '@/lib/demo/flag';
 import { descriptionFor } from './demoCopy';
 import type { Attendee, CheckInResult, DataSource, EventRecord, Profile, RsvpStatus } from './types';
@@ -36,7 +33,6 @@ const PEOPLE: { id: string; name: string }[] = [
   ['demo-u-g21', 'Example Guest 21'],
 ].map(([id, name]) => ({ id, name }));
 
-// Each person has a stable check-in code, like the one encoded in their profile QR.
 const codeOf = (index: number) => `INV-${1000 + index * 113}`;
 const personById = (id: string) => PEOPLE.findIndex((p) => p.id === id);
 
@@ -210,7 +206,6 @@ const profileOf = (id: string): Profile | null => {
   return { id, display_name: PEOPLE[i].name, email: id === HOST_ID ? 'demo.host@example.com' : undefined };
 };
 
-// Overrides when the demo host edits their own profile.
 let hostDisplayName: string | null = null;
 
 export const demoSource: DataSource = {
@@ -317,13 +312,13 @@ export const demoSource: DataSource = {
   },
 
   async checkInAttendee(eventId, rawCode): Promise<CheckInResult> {
-    // Accept a bare code, a bare user id, or the {"userId": ...} JSON a profile QR encodes.
+    // Accepts a code, a user id, or the profile QR's {"userId": ...} JSON.
     let code = rawCode.trim();
     if (code.startsWith('{')) {
       try {
         code = String(JSON.parse(code).userId ?? code);
       } catch {
-        // fall through with the raw text
+        // use the raw text
       }
     }
 
