@@ -324,18 +324,18 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                     {attendees.map((attendee) => (
                       <div
                         key={attendee.user_id}
-                        className="flex items-center justify-between bg-[#1F1F1F] border-2 border-[#E4DDC4] p-3 rounded"
+                        className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-[#1F1F1F] border-2 border-[#E4DDC4] p-3 rounded"
                       >
                         <div>
-                          <p className="font-mono">@{attendee.display_name}</p>
+                          <p className="font-mono break-words">@{attendee.display_name}</p>
                           {demo && attendee.code && (
                             <p className="text-xs opacity-70">Check-in code: {attendee.code}</p>
                           )}
                         </div>
                         {attendee.rsvp_status && (
-                          <div className="flex items-center gap-2 text-xs uppercase">
-                            <span className="border border-[#E4DDC4] px-2 py-0.5">{attendee.rsvp_status}</span>
-                            {attendee.checked_in && <span className="bg-[#E4DDC4] text-[#1F1F1F] px-2 py-0.5">Checked in</span>}
+                          <div className="flex flex-wrap items-center gap-2 text-xs uppercase">
+                            <span className="border border-[#E4DDC4] px-2 py-0.5 whitespace-nowrap">{attendee.rsvp_status}</span>
+                            {attendee.checked_in && <span className="bg-[#E4DDC4] text-[#1F1F1F] px-2 py-0.5 whitespace-nowrap">Checked in</span>}
                           </div>
                         )}
                       </div>
