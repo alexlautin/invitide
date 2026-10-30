@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getCurrentUser, createEvent, type AppUser } from '@/lib/data';
+import { getCurrentUser, createEvent, isSupabaseConfigured, type AppUser } from '@/lib/data';
+import DemoRequired from '@/components/DemoRequired';
 import { useDemoMode } from '@/lib/demo/useDemoMode';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -61,6 +62,14 @@ export default function CreateEventPage() {
 
     if (loading) {
         return <div>Loading...</div>; // Show loading screen until session is verified
+    }
+
+    if (!user && !isSupabaseConfigured()) {
+        return (
+            <main className="min-h-screen flex items-center justify-center bg-[#1F1F1F]">
+                <DemoRequired />
+            </main>
+        );
     }
 
     return (

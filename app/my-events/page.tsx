@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getCurrentUser, getMyEvents, type EventRecord } from '@/lib/data';
+import { getCurrentUser, getMyEvents, isSupabaseConfigured, type EventRecord } from '@/lib/data';
+import DemoRequired from '@/components/DemoRequired';
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 import Link from 'next/link';
@@ -26,12 +27,14 @@ export default function MyEventsPage() {
   const [attendingEvents, setAttendingEvents] = useState<EventRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [signedOut, setSignedOut] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
       const user = await getCurrentUser();
       if (!user?.id) {
+        setSignedOut(true);
         setLoading(false);
         return;
       }
@@ -122,6 +125,8 @@ export default function MyEventsPage() {
 
       {loading ? (
         <p className="text-center">Loading events...</p>
+      ) : signedOut && !isSupabaseConfigured() ? (
+        <DemoRequired />
       ) : (
         <>
           <section className="mb-12">
