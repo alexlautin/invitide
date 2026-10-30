@@ -54,7 +54,6 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [meetingLink, setMeetingLink] = useState<string | null>(null);
   const [generatedDescription, setGeneratedDescription] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteStatus, setInviteStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>("idle");
   const [inviteError, setInviteError] = useState<string | null>(null);
@@ -153,7 +152,6 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   async function handleGenerateDescription() {
     if (!event) return;
 
-    setGenerating(true);
     try {
       const text = await generateDescription(event);
 
@@ -169,8 +167,6 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
       } else {
         setGeneratedDescription('An unexpected error occurred. Please try again later.');
       }
-    } finally {
-      setGenerating(false);
     }
   }
 
@@ -191,6 +187,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
       setScanStatus(alreadyCheckedIn ? `${profile.display_name} is already checked in.` : 'Scan successful!');
       setTimeout(() => setScanning(false), 1500);
 
+      if (!demo) return;
       try {
         const roster = await getRoster(id);
         setAttendees(roster.attendees);
@@ -500,10 +497,9 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                 {isHost && (
                   <button
                     onClick={handleGenerateDescription}
-                    disabled={generating}
-                    className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 disabled:opacity-60 disabled:cursor-wait"
+                    className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                   >
-                    {generating ? 'Generating...' : 'Create AI Description'}
+                    Create AI Description
                   </button>
                 )}
               </div>

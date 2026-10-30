@@ -82,7 +82,7 @@ function seed(): State {
     description,
     date,
     location,
-    image_url: `/demo/${id.replace('demo-evt-', '')}.svg`,
+    image_url: '',
     user_id,
     meeting_link: null,
     created_at: at(-40, 12),
