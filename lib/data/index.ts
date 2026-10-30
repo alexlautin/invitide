@@ -5,6 +5,7 @@ import { supabaseSource } from './supabase';
 import type { DataSource } from './types';
 
 export * from './types';
+export { isSupabaseConfigured } from '@/lib/supabaseClient';
 
 // Demo mode (set via /demo) swaps in the in-memory backend.
 const source = (): DataSource => (isDemo() ? demoSource : supabaseSource);

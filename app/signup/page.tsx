@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signUp, signInWithGitHub } from '@/lib/data';
+import { signUp, signInWithGitHub, isSupabaseConfigured } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -10,6 +10,8 @@ import { useDemoMode } from '@/lib/demo/useDemoMode';
 export default function SignupPage() {
   const router = useRouter();
   const demo = useDemoMode();
+  const showcase = !demo && !isSupabaseConfigured();
+  const off = demo || showcase;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -59,6 +61,19 @@ export default function SignupPage() {
               Sign-up is off in demo mode. You&apos;re already signed in as the host.
           </p>
                 )}
+        {showcase && (
+          <>
+            <p className="mb-4 text-sm text-[#E4DDC4] border border-[#E4DDC4] rounded-md p-3">
+              Accounts are turned off for this portfolio version. Try the full app in demo mode.
+            </p>
+            <Link
+              href="/demo"
+              className="mb-6 block w-full py-2 px-4 text-center bg-[#E4DDC4] text-[#1F1F1F] rounded-md border border-[#E4DDC4] hover:bg-transparent hover:text-[#E4DDC4] transition duration-300"
+            >
+              Try the demo
+            </Link>
+          </>
+        )}
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
             <label className="block mb-1 text-sm font-medium text-[#E4DDC4]">Display Name</label>
@@ -67,7 +82,8 @@ export default function SignupPage() {
               value={username}
               onChange={e => setUsername(e.target.value)}
               required
-              className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={off}
+              className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
           <div>
@@ -77,7 +93,8 @@ export default function SignupPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={off}
+              className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
           <div>
@@ -88,7 +105,8 @@ export default function SignupPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={off}
+                className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -100,7 +118,8 @@ export default function SignupPage() {
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={off}
+                className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -122,8 +141,8 @@ export default function SignupPage() {
           {error && <p className="text-red-600 text-sm">{error}</p>}
           <button
             type="submit"
-            disabled={demo}
-            title={demo ? 'Sign-up is disabled in demo mode' : undefined}
+            disabled={off}
+            title={demo ? 'Sign-up is disabled in demo mode' : showcase ? 'Accounts are turned off for this portfolio version' : undefined}
             className="w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#E4DDC4]"
           >
             Register
@@ -133,8 +152,8 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={handleGitHubSignup}
-            disabled={demo}
-            title={demo ? 'GitHub sign-up is disabled in demo mode' : undefined}
+            disabled={off}
+            title={demo ? 'GitHub sign-up is disabled in demo mode' : showcase ? 'Accounts are turned off for this portfolio version' : undefined}
             className="disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#E4DDC4] flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
           >
             <Image
@@ -147,7 +166,7 @@ export default function SignupPage() {
             Sign up with GitHub
           </button>
         </div>
-        {!demo && (
+        {!demo && !showcase && (
           <div className="mt-6">
             <Link
                 href="/demo"
