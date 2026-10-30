@@ -49,6 +49,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const [scanning, setScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState('');
   const [manualCode, setManualCode] = useState('');
+  const [generating, setGenerating] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -152,6 +153,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   async function handleGenerateDescription() {
     if (!event) return;
 
+    setGenerating(true);
     try {
       const text = await generateDescription(event);
 
@@ -167,6 +169,8 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
       } else {
         setGeneratedDescription('An unexpected error occurred. Please try again later.');
       }
+    } finally {
+      setGenerating(false);
     }
   }
 
@@ -497,9 +501,10 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                 {isHost && (
                   <button
                     onClick={handleGenerateDescription}
-                    className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                    disabled={demo && generating}
+                    className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 disabled:opacity-60 disabled:cursor-wait"
                   >
-                    Create AI Description
+                    {demo && generating ? 'Generating...' : 'Create AI Description'}
                   </button>
                 )}
               </div>
