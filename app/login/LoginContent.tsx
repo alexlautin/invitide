@@ -3,22 +3,31 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
-import { signIn, signInWithGitHub } from '@/lib/data';
+import { signIn, signInWithGitHub, isSupabaseConfigured } from '@/lib/data';
+import { enableDemo } from '@/lib/demo/flag';
 import Image from 'next/image';
 import { useDemoMode } from '@/lib/demo/useDemoMode';
 
 export default function LoginContent() {
     const router = useRouter();
     const demo = useDemoMode();
+    // With no backend configured, the form is a showcase that signs in as the demo user.
+    const showcase = !demo && !isSupabaseConfigured();
     const demoTip = demo ? 'Sign-in is disabled in demo mode' : undefined;
     const searchParams = useSearchParams();
     const verified = searchParams.get('verified');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState(isSupabaseConfigured() ? '' : 'demo.host@example.com');
+    const [password, setPassword] = useState(isSupabaseConfigured() ? '' : 'demo-password');
     const [error, setError] = useState<string | null>(null);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (showcase) {
+            enableDemo();
+            router.push('/my-events');
+            return;
+        }
 
         const { error } = await signIn(email, password);
 
@@ -59,6 +68,12 @@ export default function LoginContent() {
                     </p>
                 )}
 
+                {showcase && (
+                    <p className="mb-4 text-sm text-[#E4DDC4] border border-[#E4DDC4] rounded-md p-3">
+                        Accounts are turned off for this portfolio version. Sign in as the demo user to try the full app.
+                    </p>
+                )}
+
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
                         <label className="block mb-1 text-sm font-medium text-[#E4DDC4]">Email</label>
@@ -66,6 +81,7 @@ export default function LoginContent() {
                             type="email"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
+                            readOnly={showcase}
                             required
                             className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md bg-[#1F1F1F] focus:outline-none focus:ring-2 focus:ring-[#E4DDC4]"
                         />
@@ -76,6 +92,7 @@ export default function LoginContent() {
                             type="password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
+                            readOnly={showcase}
                             required
                             className="w-full px-3 py-2 border text-[#E4DDC4] border-gray-300 rounded-md bg-[#1F1F1F] focus:outline-none focus:ring-2 focus:ring-[#E4DDC4]"
                         />
@@ -89,7 +106,7 @@ export default function LoginContent() {
                         title={demoTip}
                         className="w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#E4DDC4]"
                     >
-                        Log In
+                        {showcase ? 'Sign in as demo user' : 'Log In'}
                     </button>
                 </form>
 
@@ -97,8 +114,8 @@ export default function LoginContent() {
                     <button
                         type="button"
                         onClick={handleGitHubLogin}
-                        disabled={demo}
-                        title={demo ? 'GitHub sign-in is disabled in demo mode' : undefined}
+                        disabled={demo || showcase}
+                        title={demo ? 'GitHub sign-in is disabled in demo mode' : showcase ? 'Accounts are turned off for this portfolio version' : undefined}
                         className="disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#E4DDC4] flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                     >
                         <Image
@@ -112,7 +129,7 @@ export default function LoginContent() {
                     </button>
                 </div>
 
-                {!demo && (
+                {!demo && !showcase && (
                     <div className="mt-6">
                         <Link
                     href="/demo"

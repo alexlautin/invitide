@@ -16,7 +16,7 @@ async function retryFetch(url: string, options: RequestInit, retries = 3, delay 
   throw new Error('API request failed after retries');
 }
 
-const NOT_CONFIGURED = { error: 'The backend is not configured. Try the demo instead.' };
+const NOT_CONFIGURED = { error: 'Accounts are turned off for this portfolio version. Try the full app in demo mode.' };
 
 export const supabaseSource: DataSource = {
   async getCurrentUser() {
