@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import QrScanner from 'qr-scanner';
 import { useDemoMode } from '@/lib/demo/useDemoMode';
+import { enableDemo, isDemo } from '@/lib/demo/flag';
 // import { generateEventImage } from '@/utils/gemini';
 
 import { JetBrains_Mono } from 'next/font/google';
@@ -60,11 +61,13 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   useEffect(() => {
+    // iOS Safari drops sessionStorage when it is closed. A demo event link should still open.
+    if (id?.startsWith('demo-') && !isDemo()) enableDemo();
     getCurrentUser().then((sessionUser) => {
       if (sessionUser) setUser(sessionUser);
       else console.error('No user session found.');
     });
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     if (!event || !user) return;
@@ -251,10 +254,28 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
     };
   }, [scanning, id]);
 
-  if (loading || !event) {
+  if (loading) {
     return (
       <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex items-center justify-center text-[#E4DDC4]`}>
         <div className="text-2xl">Loading event details...</div>
+      </main>
+    );
+  }
+
+  if (!event) {
+    const demoEvent = id?.startsWith('demo-');
+    return (
+      <main className={`${jetBrainsMono.variable} ${vt323.variable} min-h-screen flex flex-col items-center justify-center gap-6 p-8 text-center text-[#E4DDC4]`}>
+        <div className="text-2xl">Event not found.</div>
+        {demoEvent && (
+          <p className="max-w-sm">Demo events only exist until the page is reloaded.</p>
+        )}
+        <Link
+          href={demoEvent ? '/demo' : '/my-events'}
+          className="border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+        >
+          {demoEvent ? 'Back to the demo' : 'Back to Events'}
+        </Link>
       </main>
     );
   }
