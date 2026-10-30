@@ -5,10 +5,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
-import { supabase } from '@/lib/supabaseClient';
+import { getCurrentUser, getProfile, signOut, type AppUser } from '@/lib/data';
 import './customCursor.css';
 import { useRouter } from 'next/navigation';
-import { User } from '@supabase/supabase-js';
+import { useDemoMode } from '@/lib/demo/useDemoMode';
 
 const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -48,33 +48,18 @@ const styles = `
 
 export default function HomePage() {
   const router = useRouter();
+  const demo = useDemoMode();
   const [displayName, setDisplayName] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDisplayName = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
-
-      if (error) {
-        console.error('Error getting session:', error.message);
-        setLoading(false);
-        return;
-      }
-
-      const user = session?.user ?? null;
+      const user = await getCurrentUser();
       setUser(user);
 
       if (user?.id) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('display_name')
-          .eq('id', user.id)
-          .single();
-
+        const profile = await getProfile(user.id);
         setDisplayName(profile?.display_name ?? null);
       }
 
@@ -85,7 +70,7 @@ export default function HomePage() {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     setDisplayName(null);
     setUser(null);
   };
@@ -174,6 +159,14 @@ export default function HomePage() {
             >
               My Events
             </Link>
+            {!demo && (
+              <Link
+                href="/demo"
+                className="border-[4px] text-xl sm:text-2xl border-[#E4DDC4] bg-[#E4DDC4] text-[#1F1F1F] px-6 py-2 uppercase hover:bg-transparent hover:text-[#E4DDC4] transition text-center"
+              >
+                Try the demo
+              </Link>
+            )}
           </div>
         </div>
 

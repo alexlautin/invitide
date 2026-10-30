@@ -1,13 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { fetchEventForMetadata } from '@/lib/data/server';
 import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -19,13 +14,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     };
   }
 
-  const { data: event, error } = await supabase
-    .from('events')
-    .select('id, name, date, location')
-    .eq('id', id)
-    .single();
+  if (id.startsWith('demo-')) {
+    return { title: 'Demo Event', description: 'A sample event in the Invitide demo.' };
+  }
 
-  if (error || !event) {
+  const event = await fetchEventForMetadata(id);
+
+  if (!event) {
     return {
       title: 'Event Not Found | Invitide',
       description: 'Sorry, this event could not be found.',

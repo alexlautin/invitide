@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { getCurrentUser, getMyEvents, type EventRecord } from '@/lib/data';
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 import Link from 'next/link';
@@ -20,64 +20,32 @@ const vt323 = VT323({
   weight: ['400'],
 });
 
-interface Event {
-  id: string;
-  name: string;
-  description: string;
-  date: string;
-  location: string;
-  image_url: string;
-  user_id: string;
-  profiles?: {
-    display_name: string;
-  } | null;
-}
-
 export default function MyEventsPage() {
   const router = useRouter();
-  const [hostedEvents, setHostedEvents] = useState<Event[]>([]);
-  const [attendingEvents, setAttendingEvents] = useState<Event[]>([]);
+  const [hostedEvents, setHostedEvents] = useState<EventRecord[]>([]);
+  const [attendingEvents, setAttendingEvents] = useState<EventRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session?.user?.id) {
+      const user = await getCurrentUser();
+      if (!user?.id) {
         setLoading(false);
         return;
       }
 
-      const userId = session.user.id;
-
-      const [{ data: hosting }, { data: attendingIds }] = await Promise.all([
-        supabase
-          .from('events')
-          .select('*, profiles(display_name)')
-          .eq('user_id', userId),
-        supabase
-          .from('event_attendees')
-          .select('event_id')
-          .eq('user_id', userId),
-      ]);
-
-      const attendingEventIds = attendingIds?.map(a => a.event_id) || [];
-
-      const { data: attendingEventsData } = await supabase
-        .from('events')
-        .select('*, profiles(display_name)')
-        .in('id', attendingEventIds);
-
-      setHostedEvents(hosting || []);
-      setAttendingEvents(attendingEventsData || []);
+      const { hosting, attending } = await getMyEvents(user.id);
+      setHostedEvents(hosting);
+      setAttendingEvents(attending);
       setLoading(false);
     };
 
     fetchEvents();
   }, []);
 
-  const renderEventCard = (event: Event) => (
+  const renderEventCard = (event: EventRecord) => (
     <div
       key={event.id}
       onClick={() => router.push(`/event/${event.id}`)}
@@ -125,6 +93,9 @@ export default function MyEventsPage() {
           </span>
           <span>{event.location}</span>
         </div>
+        {event.attendee_count !== undefined && (
+          <p className="mt-3 text-sm text-[#E4DDC4] font-mono">{event.attendee_count} going</p>
+        )}
       </div>
     </div>
   );

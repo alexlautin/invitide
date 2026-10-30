@@ -3,30 +3,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 import './../../customCursor.css';
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-
-type Event = {
-  id: string;
-  name: string;
-  date: string;
-  location: string;
-  created_at: string;
-  // add more fields as needed
-};
+import { getLatestEvent, type EventRecord } from '@/lib/data';
 
 const Success: React.FC = () => {
-  const [event, setEvent] = useState<Event | null>(null);
+  const [event, setEvent] = useState<EventRecord | null>(null);
   useEffect(() => {
     const fetchLatestEvent = async () => {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (!error && data) {
-        setEvent(data);
+      const latest = await getLatestEvent();
+      if (latest) {
+        setEvent(latest);
       }
     };
 

@@ -2,13 +2,28 @@
 import { use } from 'react';
 import Head from 'next/head';
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { useEffect, useRef, useState } from 'react';
+import {
+  getCurrentUser,
+  getEvent,
+  getRoster,
+  isRsvped,
+  setRsvp,
+  deleteEvent,
+  ensureMeetingLink,
+  generateDescription,
+  saveDescription,
+  checkInAttendee,
+  sendInvite,
+  type AppUser,
+  type Attendee,
+  type EventRecord,
+} from '@/lib/data';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User } from '@supabase/supabase-js';
 import QrScanner from 'qr-scanner';
+import { useDemoMode } from '@/lib/demo/useDemoMode';
 // import { generateEventImage } from '@/utils/gemini';
 
 import { JetBrains_Mono } from 'next/font/google';
@@ -17,33 +32,15 @@ import { VT323 } from 'next/font/google';
 const jetBrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono', weight: ['400'] });
 const vt323 = VT323({ subsets: ['latin'], variable: '--font-vt323', weight: ['400'] });
 
-interface Event {
-  id: string;
-  name: string;
-  description: string;
-  date: string;
-  location: string;
-  image_url: string;
-  user_id: string;
-  meeting_link?: string | null;
-  profiles?: { display_name: string } | null;
-}
-
-interface Attendee {
-  id: string;
-  user_id: string;
-  display_name: string;
-}
-
 export default function EventPage({ params: rawParams }: { params: Promise<{ id: string }> }) {
   const params = use(rawParams);
-  console.log('Rendering EventPage for event ID:', params.id);
 
   const router = useRouter();
+  const demo = useDemoMode();
   const id = params?.id as string;
 
-  const [event, setEvent] = useState<Event | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [event, setEvent] = useState<EventRecord | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isRSVPed, setIsRSVPed] = useState(false);
@@ -51,6 +48,8 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const [joinedUsers, setJoinedUsers] = useState<Attendee[]>([]);
   const [scanning, setScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState('');
+  const [manualCode, setManualCode] = useState('');
+  const [generating, setGenerating] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -61,49 +60,24 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkSession = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-            console.log('User session loaded:', session.user);
-            setUser(session.user);
-        } else {
-            console.error('No user session found.');
-        }
-    };
-
-    checkSession();
-}, []);
+    getCurrentUser().then((sessionUser) => {
+      if (sessionUser) setUser(sessionUser);
+      else console.error('No user session found.');
+    });
+  }, []);
 
   useEffect(() => {
-    if (!event || !user) {
-      console.log('Waiting for event and user data to load.');
-      return;
-    }
+    if (!event || !user) return;
 
     const createVideoCallLink = async () => {
       try {
-        if (!event.meeting_link) {
-          const uniqueRoomName = `event-room-${Date.now()}`;
-          const jitsiMeetingLink = `https://meet.jit.si/${uniqueRoomName}`;
-
-          const { data, error } = await supabase
-            .from('events')
-            .update({ meeting_link: jitsiMeetingLink })
-            .eq('id', event.id)
-            .select('meeting_link');
-
-          if (error) {
-            console.error('Error saving meeting link to database:', error);
-            alert('Error saving meeting link: ' + JSON.stringify(error));
-            return;
-          }
-
-          if (data && data.length > 0 && data[0].meeting_link) {
-            setMeetingLink(data[0].meeting_link);
-          }
-        } else {
-          setMeetingLink(event.meeting_link);
+        const { link, error } = await ensureMeetingLink(event);
+        if (error) {
+          console.error('Error saving meeting link to database:', error);
+          alert('Error saving meeting link: ' + JSON.stringify(error));
+          return;
         }
+        if (link) setMeetingLink(link);
       } catch {
         console.error('Error creating video call link');
       }
@@ -112,123 +86,22 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
     createVideoCallLink();
   }, [event, user]);
 
-useEffect(() => {
-    if (!id) {
-        console.error('Event ID is missing. Cannot fetch attendees.');
-        return;
-    }
-
-    if (!user) {
-      console.error('[Error] User session not loaded yet — delaying attendee fetch.');
-      return;
-    }
-
-    console.log('Fetching attendees for event ID:', id, 'and user:', user.id);
-
-    const fetchAttendees = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('event_attendees')
-                .select('user_id, profiles(display_name)')
-                .eq('event_id', id);
-
-            if (error) {
-                console.error('Error fetching attendees from Supabase:', error);
-                return;
-            }
-
-            if (!data) {
-                console.error('No attendees found for the given event ID.');
-                return;
-            }
-
-            const mappedAttendees = data.map((attendee) => ({
-                id: attendee.user_id, // Use user_id as id
-                user_id: attendee.user_id,
-                display_name: attendee.profiles[0]?.display_name || 'Unknown', // Extract display_name from profiles
-            }));
-
-            setAttendees(mappedAttendees);
-        } catch (_err) {
-            console.error('Unexpected error fetching attendees:', _err);
-        }
-    };
-
-    fetchAttendees();
-}, [id, user]);
-
   useEffect(() => {
     if (!id) return;
     const fetchEvent = async () => {
       try {
-        const { data, error } = await supabase
-          .from('events')
-          .select('*, profiles(display_name)')
-          .eq('id', id)
-          .single();
-
-        if (error) throw error;
+        const data = await getEvent(id);
         setEvent(data);
 
-        // Check if user has RSVPed
-        if (user) {
-          const { data: rsvpData } = await supabase
-            .from('event_attendees')
-            .select('*')
-            .eq('event_id', id)
-            .eq('user_id', user.id)
-            .single();
+        if (user && data) {
+          setIsRSVPed(await isRsvped(id, user.id));
+          const host = user.id === data.user_id;
+          setIsHost(host);
 
-          setIsRSVPed(!!rsvpData);
-          if (user?.id && data?.user_id) {
-            setIsHost(user.id === data.user_id);
-            console.log('User is host:', user.id === data.user_id);
-          }
-
-          // If user is host, fetch attendees
-          if (user.id === data.user_id) {
-            const { data: attendeesRaw, error: attendeesError } = await supabase
-              .from('event_attendees')
-              .select('user_id')
-              .eq('event_id', id);
-
-            if (attendeesError) throw attendeesError;
-            const userIds = attendeesRaw?.map(a => a.user_id) ?? [];
-
-            const { data: profilesData, error: profilesError } = await supabase
-              .from('profiles')
-              .select('id, display_name')
-              .in('id', userIds as string[]);
-
-            if (profilesError) throw profilesError;
-            const mappedAttendees = profilesData.map(profile => ({
-              id: profile.id,
-              user_id: profile.id,
-              display_name: profile.display_name,
-            }));
-
-            setAttendees(mappedAttendees);
-
-            // Fetch joined users
-            const { data: joinedData } = await supabase
-              .from('event_attendees')
-              .select('user_id')
-              .eq('event_id', id);
-
-            const joinedUserIds = joinedData?.map(a => a.user_id) ?? [];
-
-            const { data: joinedProfiles } = await supabase
-              .from('profiles')
-              .select('id, display_name')
-              .in('id', joinedUserIds as string[]);
-
-            const joined = (joinedProfiles ?? []).map(profile => ({
-              id: profile.id,
-              user_id: profile.id,
-              display_name: profile.display_name,
-            }));
-
-            setJoinedUsers(joined);
+          if (host) {
+            const roster = await getRoster(id);
+            setAttendees(roster.attendees);
+            setJoinedUsers(roster.joined);
           }
         }
       } catch (_err) {
@@ -252,38 +125,14 @@ useEffect(() => {
       router.push('/login');
       return;
     }
+    if (!event) return;
 
-    try {
-      if (isRSVPed) {
-        // Remove RSVP
-        const { error } = await supabase
-          .from('event_attendees')
-          .delete()
-          .eq('event_id', event?.id)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        setIsRSVPed(false);
-      } else {
-        // Add RSVP
-        const { error } = await supabase
-          .from('event_attendees')
-          .insert([
-            {
-              event_id: event?.id,
-              user_id: user.id,
-            },
-          ]);
-
-        if (error) throw error;
-        setIsRSVPed(true);
-      }
-    } catch (err) {
-      console.error('❌ Error updating RSVP status:', err);
-      if (err instanceof Error) {
-        console.error('🔍 Message:', err.message);
-      }
+    const { error } = await setRsvp(event.id, user.id, !isRSVPed);
+    if (error) {
+      console.error('❌ Error updating RSVP status:', error);
+      return;
     }
+    setIsRSVPed(!isRSVPed);
   };
 
   const handleDeleteEvent = async () => {
@@ -291,24 +140,8 @@ useEffect(() => {
 
     setIsDeleting(true);
     try {
-      // First delete all attendees for this event
-      const { error: attendeesError } = await supabase
-        .from('event_attendees')
-        .delete()
-        .eq('event_id', event.id);
-
-      if (attendeesError) throw attendeesError;
-
-      // Then delete the event
-      const { error: eventError } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', event.id)
-        .eq('user_id', user.id);
-
-      if (eventError) throw eventError;
-
-      // Redirect to profile page after successful deletion
+      const { error } = await deleteEvent(event.id, user.id);
+      if (error) throw new Error(error);
       router.push('/my-events');
     } catch (_err) {
       console.error('Error deleting event', _err);
@@ -320,58 +153,15 @@ useEffect(() => {
   async function handleGenerateDescription() {
     if (!event) return;
 
-    interface RetryFetchOptions {
-      method: string;
-      headers: Record<string, string>;
-      body?: string;
-    }
-
-    const retryFetch = async (
-      url: string,
-      options: RetryFetchOptions,
-      retries: number = 3,
-      delay: number = 1000
-    ): Promise<Response> => {
-      for (let i = 0; i < retries; i++) {
-      const response: Response = await fetch(url, options);
-      if (response.ok) return response;
-      if (i < retries - 1) await new Promise((resolve) => setTimeout(resolve, delay));
-      }
-      throw new Error('API request failed after retries');
-    };
-
+    setGenerating(true);
     try {
-      const prompt = `Write a short and engaging description for the event named '${event.name}' happening at ${event.location} on ${new Date(event.date).toLocaleDateString()} It should be one sentence. Only give one response and one option. You are a moderated chat bot, so no explicit phrases or anything you deem inappropriate will be tolerated. The title may not include any such thing that you do not think is appropriate. You do not have to generate anything that goes against your filter.`;
-      const response = await retryFetch('/api/generate-content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      });
+      const text = await generateDescription(event);
 
-      const data = await response.json();
-      console.log('API Response:', data); // Log the full API response for debugging
+      const { error } = await saveDescription(event.id, text);
+      if (error) return;
 
-      const generatedDescription = data?.text || 'No description generated.';
-
-      // Update the event description in the database
-      const { error } = await supabase
-        .from('events')
-        .update({ description: generatedDescription })
-        .eq('id', event.id);
-
-      if (error) {
-        console.error('Error updating event description:', error);
-        return;
-      }
-
-      // Update the local state
-      setEvent((prev) => prev ? { ...prev, description: generatedDescription } : prev);
-
-      if (data && data.contents && data.contents[0]?.parts[0]?.text) {
-        setGeneratedDescription(data.contents[0].parts[0].text);
-      } else {
-        setGeneratedDescription(data.text ?? JSON.stringify(data, null, 2));
-      }
+      setEvent((prev) => prev ? { ...prev, description: text, ai_generated: true } : prev);
+      setGeneratedDescription(text);
     } catch (error) {
       console.error('Error generating description:', error);
       if (error instanceof Error && error.message.includes('overloaded')) {
@@ -379,8 +169,43 @@ useEffect(() => {
       } else {
         setGeneratedDescription('An unexpected error occurred. Please try again later.');
       }
+    } finally {
+      setGenerating(false);
     }
   }
+
+  // Check in whoever the scanned (or typed) code belongs to.
+  const processCode = async (code: string) => {
+    try {
+      const { profile, error, alreadyCheckedIn } = await checkInAttendee(id, code);
+      if (error || !profile) {
+        setScanStatus(!error || error === 'User profile not found.' ? 'User profile not found.' : `Error: ${error}`);
+        return;
+      }
+
+      setJoinedUsers((prev) =>
+        prev.some((u) => u.id === profile.id)
+          ? prev
+          : [...prev, { id: profile.id, user_id: profile.id, display_name: profile.display_name }]
+      );
+      setScanStatus(alreadyCheckedIn ? `${profile.display_name} is already checked in.` : 'Scan successful!');
+      setTimeout(() => setScanning(false), 1500);
+
+      if (!demo) return;
+      try {
+        const roster = await getRoster(id);
+        setAttendees(roster.attendees);
+        setJoinedUsers(roster.joined);
+      } catch (e) {
+        console.error('Error refreshing attendees:', e);
+      }
+    } catch (error) {
+      console.error('Error processing QR code:', error);
+      setScanStatus('Error processing QR code.');
+    }
+  };
+  const processCodeRef = useRef(processCode);
+  processCodeRef.current = processCode;
 
   useEffect(() => {
     if (!scanning) return;
@@ -390,87 +215,29 @@ useEffect(() => {
 
     const startScanner = async () => {
       setScanStatus('Initializing scanner...');
-      
-      // Simple QR scanner without custom overlay
+
       let hasScanned = false;
-      
+
       scanner = new QrScanner(
         video,
         result => {
           if (hasScanned) return;
           hasScanned = true;
-          console.log('Scanned result:', result.data);
           setScanStatus('Processing scanned data...');
-          const scannedUserId = result.data;
-          
-          // Process the result
-          handleScannedCode(scannedUserId);
+          processCodeRef.current(result.data);
         },
         {
           highlightScanRegion: true,
-          highlightCodeOutline: true, // Use built-in highlighting instead
+          highlightCodeOutline: true,
         }
       );
-      
-      await scanner.start();
-      setScanStatus('Scanner is active. Please align the QR code.');
-    };
 
-    // Function to handle the scanned code data
-    const handleScannedCode = async (scannedUserId: string) => {
       try {
-        // Try to parse JSON if the string looks like JSON
-        let userId = scannedUserId;
-        if (scannedUserId.includes('{') && scannedUserId.includes('}')) {
-          try {
-            const jsonData = JSON.parse(scannedUserId);
-            userId = jsonData.userId || scannedUserId;
-          } catch (e) {
-            console.error('Failed to parse QR JSON:', e);
-            // Continue with the original string if parsing fails
-          }
-        }
-
-        console.log('Processing user ID:', userId);
-        
-        const { error } = await supabase
-          .from('event_attendees')
-          .upsert({ event_id: id, user_id: userId }, { onConflict: 'event_id,user_id' });
-
-        if (!error) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('id, display_name')
-            .eq('id', userId)
-            .single();
-
-          if (profile) {
-            setJoinedUsers(prev => {
-              // Check if user already exists in the array to prevent duplicates
-              if (prev.some(user => user.id === profile.id)) {
-                return prev;
-              }
-              return [
-                ...prev,
-                {
-                  id: profile.id,
-                  user_id: profile.id,
-                  display_name: profile.display_name,
-                },
-              ];
-            });
-            setScanStatus('Scan successful!');
-            setTimeout(() => setScanning(false), 1500);
-          } else {
-            setScanStatus('User profile not found.');
-          }
-        } else {
-          console.error('Error adding attendee:', error);
-          setScanStatus(`Error: ${error.message}`);
-        }
-      } catch (error) {
-        console.error('Error processing QR code:', error);
-        setScanStatus('Error processing QR code.');
+        await scanner.start();
+        setScanStatus('Scanner is active. Please align the QR code.');
+      } catch (e) {
+        console.error('Could not start the camera:', e);
+        setScanStatus('Camera unavailable.');
       }
     };
 
@@ -534,11 +301,17 @@ useEffect(() => {
                   <span className="font-semibold">Location:</span> {event.location}
                 </p>
                 <p className="text-[#E4DDC4]">
-                  <span className="font-semibold">Description:</span> {generatedDescription?.trim() || (event.description ? `${event.description} ✨ AI GENERATED ✨` : 'No description available.')}
+                  <span className="font-semibold">Description:</span> {generatedDescription?.trim() || (event.description ? (event.ai_generated === false ? event.description : `${event.description} ✨ AI GENERATED ✨`) : 'No description available.')}
+                  {demo && generatedDescription && <span className="ml-2 text-xs opacity-70">(sample text, not generated by a real model)</span>}
                 </p>
                 <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
                 </p>
+                {event.attendee_count !== undefined && (
+                  <p className="text-[#E4DDC4]">
+                    <span className="font-semibold">Going:</span> {event.attendee_count}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -555,7 +328,16 @@ useEffect(() => {
                       >
                         <div>
                           <p className="font-mono">@{attendee.display_name}</p>
+                          {demo && attendee.code && (
+                            <p className="text-xs opacity-70">Check-in code: {attendee.code}</p>
+                          )}
                         </div>
+                        {attendee.rsvp_status && (
+                          <div className="flex items-center gap-2 text-xs uppercase">
+                            <span className="border border-[#E4DDC4] px-2 py-0.5">{attendee.rsvp_status}</span>
+                            {attendee.checked_in && <span className="bg-[#E4DDC4] text-[#1F1F1F] px-2 py-0.5">Checked in</span>}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -592,46 +374,32 @@ useEffect(() => {
                     placeholder="Recipient's email"
                     value={inviteEmail}
                     onChange={e => setInviteEmail(e.target.value)}
+                    disabled={demo}
+                    title={demo ? 'Sending email is disabled in demo mode' : undefined}
                     className="flex-1 px-4 py-2 text-[18px] font-mono border-[4px] border-[#E4DDC4] bg-[#1F1F1F] text-[#E4DDC4] focus:outline-none focus:ring-2 focus:ring-[#E4DDC4] placeholder-[#b8b8b8]"
                   />
                   <button
                     onClick={async () => {
                       setInviteStatus('sending');
                       setInviteError(null);
-                      try {
-                        const res = await fetch('/api/send-event-email', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            to: inviteEmail,
-                            event: {
-                              name: event.name,
-                              date: event.date,
-                              location: event.location,
-                              link: `${window.location.origin}/event/${event.id}`,
-                            },
-                          }),
-                        });
-                        if (res.ok) {
-                          setInviteStatus('sent');
-                          setInviteEmail('');
-                          setTimeout(() => setInviteStatus('idle'), 2000);
-                        } else {
-                          const data = await res.json();
-                          setInviteStatus('error');
-                          setInviteError(data.error || 'Failed to send email');
-                        }
-                      } catch {
+                      const { error } = await sendInvite(inviteEmail, event, `${window.location.origin}/event/${event.id}`);
+                      if (error) {
                         setInviteStatus('error');
-                        setInviteError('Failed to send email');
+                        setInviteError(error);
+                      } else {
+                        setInviteStatus('sent');
+                        setInviteEmail('');
+                        setTimeout(() => setInviteStatus('idle'), 2000);
                       }
                     }}
-                    disabled={inviteStatus === 'sending' || !inviteEmail}
+                    disabled={demo || inviteStatus === 'sending' || !inviteEmail}
+                    title={demo ? 'Sending email is disabled in demo mode' : undefined}
                     className="block border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {inviteStatus === 'sending' ? 'Sending...' : 'Send Invite'}
                   </button>
                 </div>
+                {demo && <p className="mt-2 text-sm opacity-70">Email invites are turned off in demo mode.</p>}
                 {inviteStatus === 'sent' && <p className="text-green-400 mt-2">Invite sent!</p>}
                 {inviteStatus === 'error' && <p className="text-red-500 mt-2">{inviteError}</p>}
               </div>
@@ -734,9 +502,10 @@ useEffect(() => {
                 {isHost && (
                   <button
                     onClick={handleGenerateDescription}
-                    className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                    disabled={demo && generating}
+                    className="w-full border-[4px] text-[18px] font-mono border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 disabled:opacity-60 disabled:cursor-wait"
                   >
-                    Create AI Description
+                    {demo && generating ? 'Generating...' : 'Create AI Description'}
                   </button>
                 )}
               </div>
@@ -797,6 +566,37 @@ useEffect(() => {
               </div>
             </div>
             <p className="mt-4 text-center text-[#E4DDC4]">{scanStatus}</p>
+            {demo && (
+              <p className="mt-4 text-center text-sm opacity-70">
+                Demo codes only. Pick one from the attendee list.
+              </p>
+            )}
+            {demo && (
+              <form
+                className="mt-2 flex gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!manualCode.trim()) return;
+                  setScanStatus('Processing entered code...');
+                  processCode(manualCode).then(() => setManualCode(''));
+                }}
+              >
+                <input
+                  type="text"
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value)}
+                  placeholder="Enter a code, e.g. INV-1339"
+                  aria-label="Check-in code"
+                  className="flex-1 min-w-0 px-3 py-2 font-mono border-[3px] border-[#E4DDC4] bg-[#1F1F1F] text-[#E4DDC4] placeholder-[#b8b8b8] focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="border-[3px] font-mono border-[#E4DDC4] px-3 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                >
+                  Check in
+                </button>
+              </form>
+            )}
             <button onClick={() => setScanning(false)} className="mt-4 w-full border-[4px] text-[18px] font-mono border-red-500 text-red-500 px-4 py-2 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition duration-300">Cancel</button>
           </div>
         </div>

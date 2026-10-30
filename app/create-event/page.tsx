@@ -1,35 +1,30 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { getCurrentUser, createEvent, type AppUser } from '@/lib/data';
+import { useDemoMode } from '@/lib/demo/useDemoMode';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { User } from '@supabase/supabase-js';
 
 
 export default function CreateEventPage() {
     const router = useRouter();
+    const demo = useDemoMode();
     const [eventName, setEventName] = useState('');
     const [eventDate, setEventDate] = useState('');
     const [location, setLocation] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true); // Add loading state for initial load
-    const [user, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<AppUser | null>(null);
     const [eventTime, setEventTime] = useState('');
 
     useEffect(() => {
         const fetchSession = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            
-            if (error) {
-                console.error('Error fetching session:', error.message);
-                setLoading(false);  // Set loading to false if error occurs
-                return;
-            }
-            
-            if (session?.user) {
-                setUser(session.user);  // Store user info in state
+            const sessionUser = await getCurrentUser();
+
+            if (sessionUser) {
+                setUser(sessionUser);  // Store user info in state
             }
             
             setLoading(false); // Stop loading once session is checked
@@ -50,23 +45,17 @@ export default function CreateEventPage() {
             : new Date(`${eventDate}T00:00`).toISOString();
         console.log('Creating event with datetime:', eventDateTime);
 
-        const { data, error } = await supabase
-            .from('events')
-            .insert([
-                {
-                    name: eventName,
-                    date: eventDateTime,
-                    location: location,
-                    user_id: user?.id,
-                },
-            ])
-            .select()
-            .single();
+        const { event, error } = await createEvent({
+            name: eventName,
+            date: eventDateTime,
+            location: location,
+            user_id: user.id,
+        });
 
         if (error) {
-            setError(error.message);
-        } else if (data) {
-            router.push(`/event/${data.id}`);
+            setError(error);
+        } else if (event) {
+            router.push(`/event/${event.id}`);
         }
     };
 
@@ -145,6 +134,7 @@ export default function CreateEventPage() {
                         >
                             Create
                         </button>
+                        {demo && <p className="text-sm opacity-70">Saved in this browser tab only.</p>}
                     </form>
                 </div>
                 <div className="hidden sm:flex flex-col items-center mt-8 sm:mt-0">

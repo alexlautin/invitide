@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
-import { supabase } from '@/lib/supabaseClient';
+import { getCurrentUser, signOut } from '@/lib/data';
 import '../customCursor.css';
 
 const jetBrainsMono = JetBrains_Mono({
@@ -24,15 +24,15 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUserEmail(session?.user.email ?? null);
+      const user = await getCurrentUser();
+      setUserEmail(user?.email ?? null);
     };
 
     fetchSession();
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     setUserEmail(null);
   };
 

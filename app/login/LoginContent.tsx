@@ -3,11 +3,14 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { signIn, signInWithGitHub } from '@/lib/data';
 import Image from 'next/image';
+import { useDemoMode } from '@/lib/demo/useDemoMode';
 
 export default function LoginContent() {
     const router = useRouter();
+    const demo = useDemoMode();
+    const demoTip = demo ? 'Sign-in is disabled in demo mode' : undefined;
     const searchParams = useSearchParams();
     const verified = searchParams.get('verified');
     const [email, setEmail] = useState('');
@@ -17,48 +20,21 @@ export default function LoginContent() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await signIn(email, password);
 
         if (error) {
-            setError(error.message);
+            setError(error);
             return;
         }
 
-        if (data?.user?.id) {
-            const userId = data.user.id;
-
-            // Check if profile exists
-            const { data: existingProfile } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('id', userId)
-                .single();
-
-            if (!existingProfile) {
-                const displayName = data.user.user_metadata?.display_name || 'Anonymous';
-                const { error: profileError } = await supabase.from('profiles').insert([
-                    {
-                        id: userId,
-                        display_name: displayName,
-                    },
-                ]);
-
-                if (profileError) {
-                    console.error('Failed to create profile:', profileError.message);
-                }
-            }
-
-            router.push('/');
-        }
+        router.push('/');
     };
 
     const handleGitHubLogin = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'github',
-        });
+        const { error } = await signInWithGitHub();
 
         if (error) {
-            setError(error.message);
+            setError(error);
         }
     };
 
@@ -74,6 +50,12 @@ export default function LoginContent() {
                 {verified === 'true' && (
                     <p className="mb-4 text-green-500 font-medium text-center">
                         Email verified! You can now log in.
+                    </p>
+                )}
+
+                {demo && (
+                    <p className="mb-4 text-sm text-[#E4DDC4] border border-[#E4DDC4] rounded-md p-3">
+                        You&apos;re already signed in as the demo host, so sign-in is turned off in demo mode.
                     </p>
                 )}
 
@@ -103,7 +85,9 @@ export default function LoginContent() {
 
                     <button
                         type="submit"
-                        className="w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                        disabled={demo}
+                        title={demoTip}
+                        className="w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#E4DDC4]"
                     >
                         Log In
                     </button>
@@ -113,7 +97,9 @@ export default function LoginContent() {
                     <button
                         type="button"
                         onClick={handleGitHubLogin}
-                        className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                        disabled={demo}
+                        title={demo ? 'GitHub sign-in is disabled in demo mode' : undefined}
+                        className="disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#E4DDC4] flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
                     >
                         <Image
                             src="/github_logo.png"
@@ -125,6 +111,17 @@ export default function LoginContent() {
                         Sign in with GitHub
                     </button>
                 </div>
+
+                {!demo && (
+                    <div className="mt-6">
+                        <Link
+                    href="/demo"
+                    className="block w-full py-2 px-4 text-center bg-[#E4DDC4] text-[#1F1F1F] rounded-md border border-[#E4DDC4] hover:bg-transparent hover:text-[#E4DDC4] transition duration-300"
+                >
+                    Try the demo
+                </Link>
+                    </div>
+                )}
 
                 <div className="mt-6 text-center text-[#E4DDC4]">
                     <span>Don&apos;t have an account? </span>
