@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react"
 import "./customCursor.css";
+import DemoBanner from "@/components/DemoBanner";
 
 export const metadata = {
   title: {
@@ -31,6 +32,7 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
+          <DemoBanner />
           <div className="noise-overlay">{children}</div>
           <Analytics />
         </body>

@@ -14,6 +14,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     };
   }
 
+  if (id.startsWith('demo-')) {
+    return { title: 'Demo Event', description: 'A sample event in the Invitide demo.' };
+  }
+
   const event = await fetchEventForMetadata(id);
 
   if (!event) {

@@ -16,6 +16,8 @@ async function retryFetch(url: string, options: RequestInit, retries = 3, delay 
   throw new Error('API request failed after retries');
 }
 
+const NOT_CONFIGURED = { error: 'The backend is not configured. Try the demo instead.' };
+
 export const supabaseSource: DataSource = {
   async getCurrentUser() {
     if (!isSupabaseConfigured()) return null;
@@ -32,6 +34,7 @@ export const supabaseSource: DataSource = {
   },
 
   async signIn(email, password) {
+    if (!isSupabaseConfigured()) return NOT_CONFIGURED;
     const supabase = getSupabase();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: error.message };
@@ -58,6 +61,7 @@ export const supabaseSource: DataSource = {
   },
 
   async signUp(email, password, displayName) {
+    if (!isSupabaseConfigured()) return NOT_CONFIGURED;
     const supabase = getSupabase();
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -84,6 +88,7 @@ export const supabaseSource: DataSource = {
   },
 
   async signInWithGitHub() {
+    if (!isSupabaseConfigured()) return NOT_CONFIGURED;
     const { error } = await getSupabase().auth.signInWithOAuth({ provider: 'github' });
     return error ? { error: error.message } : {};
   },

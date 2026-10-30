@@ -23,6 +23,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import QrScanner from 'qr-scanner';
+import { useDemoMode } from '@/lib/demo/useDemoMode';
 // import { generateEventImage } from '@/utils/gemini';
 
 import { JetBrains_Mono } from 'next/font/google';
@@ -35,6 +36,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const params = use(rawParams);
 
   const router = useRouter();
+  const demo = useDemoMode();
   const id = params?.id as string;
 
   const [event, setEvent] = useState<EventRecord | null>(null);
@@ -46,6 +48,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   const [joinedUsers, setJoinedUsers] = useState<Attendee[]>([]);
   const [scanning, setScanning] = useState(false);
   const [scanStatus, setScanStatus] = useState('');
+  const [manualCode, setManualCode] = useState('');
   const [isHost, setIsHost] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -174,9 +177,9 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
   // Check in whoever the scanned (or typed) code belongs to.
   const processCode = async (code: string) => {
     try {
-      const { profile, error } = await checkInAttendee(id, code);
+      const { profile, error, alreadyCheckedIn } = await checkInAttendee(id, code);
       if (error || !profile) {
-        setScanStatus(error ? (error === 'User profile not found.' ? error : `Error: ${error}`) : 'User profile not found.');
+        setScanStatus(!error || error === 'User profile not found.' ? 'User profile not found.' : `Error: ${error}`);
         return;
       }
 
@@ -185,7 +188,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
           ? prev
           : [...prev, { id: profile.id, user_id: profile.id, display_name: profile.display_name }]
       );
-      setScanStatus('Scan successful!');
+      setScanStatus(alreadyCheckedIn ? `${profile.display_name} is already checked in.` : 'Scan successful!');
       setTimeout(() => setScanning(false), 1500);
 
       try {
@@ -297,11 +300,16 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                   <span className="font-semibold">Location:</span> {event.location}
                 </p>
                 <p className="text-[#E4DDC4]">
-                  <span className="font-semibold">Description:</span> {generatedDescription?.trim() || (event.description ? `${event.description} ✨ AI GENERATED ✨` : 'No description available.')}
+                  <span className="font-semibold">Description:</span> {generatedDescription?.trim() || (event.description ? (event.ai_generated === false ? event.description : `${event.description} ✨ AI GENERATED ✨`) : 'No description available.')}
                 </p>
                 <p className="text-[#E4DDC4]">
                   <span className="font-semibold">Created by:</span> @{event.profiles?.display_name ?? 'anonymous'}
                 </p>
+                {event.attendee_count !== undefined && (
+                  <p className="text-[#E4DDC4]">
+                    <span className="font-semibold">Going:</span> {event.attendee_count}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -318,7 +326,16 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                       >
                         <div>
                           <p className="font-mono">@{attendee.display_name}</p>
+                          {demo && attendee.code && (
+                            <p className="text-xs opacity-70">Check-in code: {attendee.code}</p>
+                          )}
                         </div>
+                        {attendee.rsvp_status && (
+                          <div className="flex items-center gap-2 text-xs uppercase">
+                            <span className="border border-[#E4DDC4] px-2 py-0.5">{attendee.rsvp_status}</span>
+                            {attendee.checked_in && <span className="bg-[#E4DDC4] text-[#1F1F1F] px-2 py-0.5">Checked in</span>}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -355,6 +372,8 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                     placeholder="Recipient's email"
                     value={inviteEmail}
                     onChange={e => setInviteEmail(e.target.value)}
+                    disabled={demo}
+                    title={demo ? 'Sending email is disabled in demo mode' : undefined}
                     className="flex-1 px-4 py-2 text-[18px] font-mono border-[4px] border-[#E4DDC4] bg-[#1F1F1F] text-[#E4DDC4] focus:outline-none focus:ring-2 focus:ring-[#E4DDC4] placeholder-[#b8b8b8]"
                   />
                   <button
@@ -371,12 +390,14 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                         setTimeout(() => setInviteStatus('idle'), 2000);
                       }
                     }}
-                    disabled={inviteStatus === 'sending' || !inviteEmail}
+                    disabled={demo || inviteStatus === 'sending' || !inviteEmail}
+                    title={demo ? 'Sending email is disabled in demo mode' : undefined}
                     className="block border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {inviteStatus === 'sending' ? 'Sending...' : 'Send Invite'}
                   </button>
                 </div>
+                {demo && <p className="mt-2 text-sm opacity-70">Email invites are turned off in demo mode.</p>}
                 {inviteStatus === 'sent' && <p className="text-green-400 mt-2">Invite sent!</p>}
                 {inviteStatus === 'error' && <p className="text-red-500 mt-2">{inviteError}</p>}
               </div>
@@ -543,6 +564,32 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
               </div>
             </div>
             <p className="mt-4 text-center text-[#E4DDC4]">{scanStatus}</p>
+            {demo && (
+              <form
+                className="mt-4 flex gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!manualCode.trim()) return;
+                  setScanStatus('Processing entered code...');
+                  processCode(manualCode).then(() => setManualCode(''));
+                }}
+              >
+                <input
+                  type="text"
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value)}
+                  placeholder="Enter a code, e.g. INV-1339"
+                  aria-label="Check-in code"
+                  className="flex-1 min-w-0 px-3 py-2 font-mono border-[3px] border-[#E4DDC4] bg-[#1F1F1F] text-[#E4DDC4] placeholder-[#b8b8b8] focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="border-[3px] font-mono border-[#E4DDC4] px-3 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+                >
+                  Check in
+                </button>
+              </form>
+            )}
             <button onClick={() => setScanning(false)} className="mt-4 w-full border-[4px] text-[18px] font-mono border-red-500 text-red-500 px-4 py-2 uppercase hover:bg-red-500 hover:text-[#1F1F1F] transition duration-300">Cancel</button>
           </div>
         </div>

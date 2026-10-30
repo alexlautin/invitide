@@ -5,9 +5,11 @@ import { signUp, signInWithGitHub } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useDemoMode } from '@/lib/demo/useDemoMode';
 
 export default function SignupPage() {
   const router = useRouter();
+  const demo = useDemoMode();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -52,6 +54,11 @@ export default function SignupPage() {
       </Link>
       <div className="border-[#E4DDC4] border-[5px] p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl text-[#E4DDC4] font-semibold mb-6">Sign Up</h1>
+        {demo && (
+          <p className="mb-4 text-sm text-[#E4DDC4] border border-[#E4DDC4] rounded-md p-3">
+              You&apos;re already signed in as the demo host, so sign-up is turned off in demo mode.
+          </p>
+                )}
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
             <label className="block mb-1 text-sm font-medium text-[#E4DDC4]">Display Name</label>
@@ -115,7 +122,9 @@ export default function SignupPage() {
           {error && <p className="text-red-600 text-sm">{error}</p>}
           <button
             type="submit"
-            className="w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+            disabled={demo}
+            title={demo ? 'Sign-up is disabled in demo mode' : undefined}
+            className="w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#E4DDC4]"
           >
             Register
           </button>
@@ -124,7 +133,9 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={handleGitHubSignup}
-            className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
+            disabled={demo}
+            title={demo ? 'GitHub sign-up is disabled in demo mode' : undefined}
+            className="disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#E4DDC4] flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#E4DDC4] text-[#E4DDC4] rounded-md hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
           >
             <Image
               src="/github_logo.png"
@@ -136,6 +147,16 @@ export default function SignupPage() {
             Sign up with GitHub
           </button>
         </div>
+        {!demo && (
+          <div className="mt-6">
+            <Link
+                href="/demo"
+                className="block w-full py-2 px-4 text-center bg-[#E4DDC4] text-[#1F1F1F] rounded-md border border-[#E4DDC4] hover:bg-transparent hover:text-[#E4DDC4] transition duration-300"
+            >
+                Try the demo
+            </Link>
+          </div>
+        )}
       </div>
     </main>
   );

@@ -93,6 +93,9 @@ export default function MyEventsPage() {
           </span>
           <span>{event.location}</span>
         </div>
+        {event.attendee_count !== undefined && (
+          <p className="mt-3 text-sm text-[#E4DDC4] font-mono">{event.attendee_count} going</p>
+        )}
       </div>
     </div>
   );
