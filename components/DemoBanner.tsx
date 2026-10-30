@@ -18,6 +18,7 @@ export default function DemoBanner() {
         type="button"
         onClick={() => {
           disableDemo();
+          // eslint-disable-next-line @next/next/no-location-assign-relative-destination
           window.location.assign('/');
         }}
         className="underline hover:no-underline"

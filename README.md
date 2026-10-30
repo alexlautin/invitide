@@ -41,11 +41,10 @@ Invitide is a modern event management platform built with Next.js, Supabase, and
    - Required variables:
      - `SUPABASE_URL`
      - `NEXT_PUBLIC_SUPABASE_URL`
-     - `SUPABASE_API_KEY`
      - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
      - `SUPABASE_SERVICE_ROLE_KEY`
-     - `GOOGLE_API_KEY` (for AI descriptions)
-     - `NEXT_PUBLIC_GEMINI_API_KEY` (for Gemini AI)
+     - `GEMINI_API_KEY` (for Gemini AI, server-only)
+     - `RESEND_API_KEY` (for email invites)
 
 4. **Run the development server:**
    ```bash

@@ -16,6 +16,15 @@ async function retryFetch(url: string, options: RequestInit, retries = 3, delay 
   throw new Error('API request failed after retries');
 }
 
+// Our API routes require the caller's Supabase session.
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await getSupabase().auth.getSession();
+  return {
+    'Content-Type': 'application/json',
+    ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+  };
+}
+
 const NOT_CONFIGURED = { error: 'Accounts are turned off for this portfolio version. Try the full app in demo mode.' };
 
 export const supabaseSource: DataSource = {
@@ -255,11 +264,14 @@ export const supabaseSource: DataSource = {
   },
 
   async generateDescription(event) {
-    const prompt = `Write a short and engaging description for the event named '${event.name}' happening at ${event.location} on ${new Date(event.date).toLocaleDateString()} It should be one sentence. Only give one response and one option. You are a moderated chat bot, so no explicit phrases or anything you deem inappropriate will be tolerated. The title may not include any such thing that you do not think is appropriate. You do not have to generate anything that goes against your filter.`;
     const response = await retryFetch('/api/generate-content', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      headers: await authHeaders(),
+      body: JSON.stringify({
+        name: event.name,
+        location: event.location,
+        date: new Date(event.date).toLocaleDateString(),
+      }),
     });
     const data = await response.json();
     return data?.text || 'No description generated.';
@@ -277,15 +289,12 @@ export const supabaseSource: DataSource = {
     return {};
   },
 
-  async sendInvite(to, event, link) {
+  async sendInvite(to, event) {
     try {
       const res = await fetch('/api/send-event-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to,
-          event: { name: event.name, date: event.date, location: event.location, link },
-        }),
+        headers: await authHeaders(),
+        body: JSON.stringify({ to, eventId: event.id }),
       });
       if (res.ok) return {};
       const data = await res.json();

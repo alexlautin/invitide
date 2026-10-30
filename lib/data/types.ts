@@ -84,5 +84,5 @@ export interface DataSource {
 
   generateDescription(event: EventRecord): Promise<string>;
   saveDescription(eventId: string, description: string): Promise<Result>;
-  sendInvite(to: string, event: EventRecord, link: string): Promise<Result>;
+  sendInvite(to: string, event: EventRecord): Promise<Result>;
 }
