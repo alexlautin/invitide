@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { signUp, signInWithGitHub } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -28,57 +28,20 @@ export default function SignupPage() {
       return;
     }
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          display_name: username,
-        },
-      },
-    });
+    const { error: signUpError } = await signUp(email, password, username);
 
     if (signUpError) {
-      setError(signUpError.message);
+      setError(signUpError);
       return;
     }
 
-    let userId = signUpData.user?.id;
-
-    if (!userId) {
-      const { data: userData } = await supabase.auth.getUser();
-      userId = userData?.user?.id;
-    }
-
-    if (!userId) {
-      setError('Signup succeeded, but could not retrieve user ID.');
-      return;
-    }
-
-    console.log('Inserting profile with userId:', userId, 'and displayName:', username);
-    const { error: profileError } = await supabase.from('profiles').insert([
-      {
-        id: userId,
-        display_name: username,
-      },
-    ]);
-
-    if (profileError) {
-      setError('Signup succeeded, but profile creation failed.');
-      console.error('Profile insert error:', profileError.message);
-      return;
-    }
-
-    console.log('Profile insert succeeded.');
     router.push('/login');
   };
 
   const handleGitHubSignup = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-    });
+    const { error } = await signInWithGitHub();
     if (error) {
-      setError(error.message);
+      setError(error);
     }
   };
 

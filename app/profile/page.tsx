@@ -1,11 +1,10 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { getCurrentUser, getProfile, updateProfile, type AppUser, type Profile } from '@/lib/data';
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User } from '@supabase/supabase-js';
 import {QRCodeCanvas} from 'qrcode.react';
 
 const jetBrainsMono = JetBrains_Mono({
@@ -21,15 +20,9 @@ const vt323 = VT323({
 });
 
 
-interface Profile {
-  id: string;
-  display_name: string;
-  email: string;
-}
-
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState('');
@@ -37,18 +30,14 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error || !session) {
+      const sessionUser = await getCurrentUser();
+      if (!sessionUser) {
         router.push('/login');
         return;
       }
-      setUser(session.user);
+      setUser(sessionUser);
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
+      const profileData = await getProfile(sessionUser.id);
 
       setProfile(profileData);
       setDisplayName(profileData?.display_name || '');
@@ -62,16 +51,13 @@ export default function ProfilePage() {
   const handleUpdateProfile = async () => {
     if (!user) return;
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ display_name: displayName })
-      .eq('id', user.id);
+    const { error } = await updateProfile(user.id, displayName);
 
     if (error) {
-      console.error('Error updating profile:', error.message);
+      console.error('Error updating profile:', error);
     } else {
       if (profile) {
-        setProfile({ ...profile, display_name: displayName, id: profile.id, email: profile.email });
+        setProfile({ ...profile, display_name: displayName });
       }
       setIsEditing(false);
     }

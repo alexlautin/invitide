@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { signIn, signInWithGitHub } from '@/lib/data';
 import Image from 'next/image';
 
 export default function LoginContent() {
@@ -17,48 +17,21 @@ export default function LoginContent() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await signIn(email, password);
 
         if (error) {
-            setError(error.message);
+            setError(error);
             return;
         }
 
-        if (data?.user?.id) {
-            const userId = data.user.id;
-
-            // Check if profile exists
-            const { data: existingProfile } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('id', userId)
-                .single();
-
-            if (!existingProfile) {
-                const displayName = data.user.user_metadata?.display_name || 'Anonymous';
-                const { error: profileError } = await supabase.from('profiles').insert([
-                    {
-                        id: userId,
-                        display_name: displayName,
-                    },
-                ]);
-
-                if (profileError) {
-                    console.error('Failed to create profile:', profileError.message);
-                }
-            }
-
-            router.push('/');
-        }
+        router.push('/');
     };
 
     const handleGitHubLogin = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'github',
-        });
+        const { error } = await signInWithGitHub();
 
         if (error) {
-            setError(error.message);
+            setError(error);
         }
     };
 
