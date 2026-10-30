@@ -56,7 +56,7 @@ export default function SignupPage() {
         <h1 className="text-2xl text-[#E4DDC4] font-semibold mb-6">Sign Up</h1>
         {demo && (
           <p className="mb-4 text-sm text-[#E4DDC4] border border-[#E4DDC4] rounded-md p-3">
-              You&apos;re already signed in as the demo host, so sign-up is turned off in demo mode.
+              Sign-up is off in demo mode. You&apos;re already signed in as the host.
           </p>
                 )}
         <form onSubmit={handleSignup} className="space-y-4">

@@ -224,7 +224,7 @@ export const supabaseSource: DataSource = {
       .in('id', userIds as string[]);
     if (profilesError) throw profilesError;
 
-    // The app has a single event_attendees table, so "attendees" and "joined" are the same rows.
+    // One event_attendees table backs both lists.
     const people = (profilesData ?? []).map(toAttendee);
     return { attendees: people, joined: people };
   },

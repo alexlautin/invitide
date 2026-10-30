@@ -1,7 +1,7 @@
 const KEY = 'invitide:demo';
 const CHANGE_EVENT = 'invitide:demo-change';
 
-// Fallback for browsers where sessionStorage is blocked, so demo still works for the page's lifetime.
+// Fallback when sessionStorage is blocked.
 let memoryFlag = false;
 
 export function isDemo(): boolean {
@@ -19,7 +19,7 @@ function setFlag(on: boolean) {
     if (on) window.sessionStorage.setItem(KEY, '1');
     else window.sessionStorage.removeItem(KEY);
   } catch {
-    // sessionStorage unavailable; memoryFlag covers this page load.
+    // memoryFlag covers this page load.
   }
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
