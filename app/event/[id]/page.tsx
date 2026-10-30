@@ -25,7 +25,6 @@ import { useRouter } from 'next/navigation';
 import QrScanner from 'qr-scanner';
 import { useDemoMode } from '@/lib/demo/useDemoMode';
 import { enableDemo, isDemo } from '@/lib/demo/flag';
-// import { generateEventImage } from '@/utils/gemini';
 
 import { JetBrains_Mono } from 'next/font/google';
 import { VT323 } from 'next/font/google';
@@ -117,11 +116,8 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
     fetchEvent();
   }, [id, user]);
 
-  useEffect(() => {
-    if (event?.meeting_link) {
-      setMeetingLink(event.meeting_link);
-    }
-  }, [event]);
+  // Only https links are rendered, so a stored javascript: URL can't run.
+  const videoLink = [event?.meeting_link, meetingLink].find((l) => l?.startsWith('https://')) ?? null;
 
   const handleRSVP = async () => {
     if (!user) {
@@ -208,7 +204,9 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
     }
   };
   const processCodeRef = useRef(processCode);
-  processCodeRef.current = processCode;
+  useEffect(() => {
+    processCodeRef.current = processCode;
+  });
 
   useEffect(() => {
     if (!scanning) return;
@@ -403,7 +401,7 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                     onClick={async () => {
                       setInviteStatus('sending');
                       setInviteError(null);
-                      const { error } = await sendInvite(inviteEmail, event, `${window.location.origin}/event/${event.id}`);
+                      const { error } = await sendInvite(inviteEmail, event);
                       if (error) {
                         setInviteStatus('error');
                         setInviteError(error);
@@ -459,9 +457,9 @@ export default function EventPage({ params: rawParams }: { params: Promise<{ id:
                 >
                   Copy Event Link
                 </button>
-                {meetingLink && (
+                {videoLink && (
                   <a
-                    href={meetingLink}
+                    href={videoLink}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full border-[4px] text-[18px] font-mono text-center border-[#E4DDC4] px-4 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition duration-300"
