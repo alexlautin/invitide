@@ -140,7 +140,7 @@ export default function HomePage() {
           >
             Create or join an event in seconds.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8 sm:mb-0">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 justify-center lg:justify-start mb-8 sm:mb-0">
             <button
               onClick={() => {
                 if (!user) {
@@ -149,20 +149,20 @@ export default function HomePage() {
                   router.push('/create-event');
                 }
               }}
-              className="border-[4px] text-lg sm:text-xl md:text-2xl border-[#E4DDC4] px-4 sm:px-6 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition"
+              className="border-[4px] text-lg sm:text-xl md:text-2xl border-[#E4DDC4] px-4 sm:px-6 py-2 uppercase whitespace-nowrap hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition"
             >
               Create Event
             </button>
             <Link
               href="/my-events"
-              className="border-[4px] text-xl sm:text-2xl border-[#E4DDC4] px-6 py-2 uppercase hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition text-center"
+              className="border-[4px] text-xl sm:text-2xl border-[#E4DDC4] px-6 py-2 uppercase whitespace-nowrap hover:bg-[#E4DDC4] hover:text-[#1F1F1F] transition text-center"
             >
               My Events
             </Link>
             {!demo && (
               <Link
                 href="/demo"
-                className="border-[4px] text-xl sm:text-2xl border-[#E4DDC4] bg-[#E4DDC4] text-[#1F1F1F] px-6 py-2 uppercase hover:bg-transparent hover:text-[#E4DDC4] transition text-center"
+                className="border-[4px] text-xl sm:text-2xl border-[#E4DDC4] bg-[#E4DDC4] text-[#1F1F1F] px-6 py-2 uppercase whitespace-nowrap hover:bg-transparent hover:text-[#E4DDC4] transition text-center"
               >
                 Try the demo
               </Link>
